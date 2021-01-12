@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/client")
 public class WxClientControllor {
 
-    @PostMapping("/consult")
+    @PostMapping("/consult") 
     public CommonsResult consult(@RequestBody Consult consult) {
 
         System.out.println(consult.toString());
