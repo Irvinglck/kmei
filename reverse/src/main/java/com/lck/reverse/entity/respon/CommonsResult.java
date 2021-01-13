@@ -1,4 +1,4 @@
-package com.lck.reverse.entity;
+package com.lck.reverse.entity.respon;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
