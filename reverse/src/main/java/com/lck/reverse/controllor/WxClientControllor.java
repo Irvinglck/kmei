@@ -12,7 +12,9 @@ import com.lck.reverse.entity.respon.CommonsResult;
 import com.lck.reverse.service.WxClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -28,15 +30,20 @@ public class WxClientControllor {
     @Autowired
     private RestTemplate restTemplate;
 
-
-
-    //多功能复合机
     @Value("${km.mutil.func.machine}")
-    private String MUTIL_FUNC;
+    private String MUTIL_FUNC_URL;
 
     //打印机 / 一体机
     @Value("${km.print.Integrated.machine}")
-    private String PRINT_INTEGRATED;
+    private String PRINT_INTEGRATED_URL;
+
+    //多功能复合机
+    @Value("${km.oos.secretId}")
+    private String sid;
+    @Value("${km.oos.secretKey}")
+    private String sKey;
+
+
 
     @PostMapping("/consult")
     public CommonsResult consult(@RequestBody TConsult consult) {
@@ -52,18 +59,30 @@ public class WxClientControllor {
     }
 
 
-    @GetMapping("/tempClient")
-    public CommonsResult consult() {
-        String mutiFunc = restTemplate.getForObject(MUTIL_FUNC,String.class);
-        JSONObject jsonObject = JSON.parseObject(mutiFunc);
+    @GetMapping("/print")
+    public CommonsResult print(
+            @RequestParam(name="printType") String printType //mutil--多功能机器
+    ) {
+        //打印类型
+        String typeMachine=printType.equals(ConstEnum.MACHINE_TYPE.getMsg())?MUTIL_FUNC_URL:PRINT_INTEGRATED_URL;
+        String machineData = null;
+        try {
+            machineData = restTemplate.getForObject(typeMachine,String.class);
+        } catch (RestClientException e) {
+            e.printStackTrace();
+        }
+        if(StringUtils.isEmpty(machineData))
+            return new CommonsResult().setMessage("调用柯美接口异常****"+typeMachine).setId(500);
+        JSONObject jsonObject = JSON.parseObject(machineData);
         Object message = jsonObject.get("message");
         if(ConstEnum.SUCCESS.getMsg().equals(message)){
             JSONArray arr = (JSONArray) jsonObject.get("data");
             List<TProAttribute> pros = JSON.parseObject(arr.toJSONString(), new TypeReference<List<TProAttribute>>() {
             });
             int i = wxClientService.insertBatch(pros);
+            if(i>0)
+                return new CommonsResult().setMessage("入库成功").setId(200);
         }
-
-        return new CommonsResult().setMessage("入库成功").setId(200);
+        return new CommonsResult().setMessage("调转柯美多接口异常********"+typeMachine).setId(500);
     }
 }

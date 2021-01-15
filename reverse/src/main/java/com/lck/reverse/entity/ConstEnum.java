@@ -3,7 +3,9 @@ package com.lck.reverse.entity;
 
 public enum ConstEnum {
 
-    SUCCESS("成功",200);
+    SUCCESS("成功",200),
+
+    MACHINE_TYPE("mutil",1);
 
     private String msg;
     private Integer code;
