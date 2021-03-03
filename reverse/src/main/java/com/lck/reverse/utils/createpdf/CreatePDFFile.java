@@ -4,13 +4,16 @@ import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
 import com.itextpdf.text.pdf.draw.DottedLineSeparator;
 import com.itextpdf.text.pdf.draw.LineSeparator;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
 
 public class CreatePDFFile {
-//    生成pdf参考文档
+    //    生成pdf参考文档
 //    https://blog.csdn.net/weixin_37848710/article/details/89522862
 //    下载文件
 //    https://www.jianshu.com/p/80ddf6a5734b
@@ -22,7 +25,7 @@ public class CreatePDFFile {
             Document document = new Document(PageSize.A4);// 建立一个Document对象
 
             // 2.建立一个书写器(Writer)与document对象关联
-            File file = new File("D:\\PDFDemo.pdf");
+            File file = new File("F:\\PDFDemoimg.pdf");
             file.createNewFile();
             PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
             writer.setPageEvent(new Watermark("HELLO ITEXTPDF"));// 水印
@@ -53,6 +56,7 @@ public class CreatePDFFile {
     private static Font textfont;
     // 最大宽度
     private static int maxWidth = 520;
+
     // 静态代码块
     static {
         try {
@@ -96,14 +100,26 @@ public class CreatePDFFile {
         // 定位
         Anchor gotoP = new Anchor("goto");
         gotoP.setReference("#top");
+        for (int i = 0; i < 3; i++) {
+            //图片资源为本地流方式
+            File fileImage=new File("C:\\Users\\Administrator\\Desktop\\ds.jpeg");
+            FileInputStream fileInputStream = new FileInputStream(fileImage);
+            byte[] ib = new byte[(int)fileImage.length()];
+            fileInputStream.read(ib);
+            // 图片资源为网络流的方式
+//        Image image = Image.getInstance("https://img-blog.csdn.net/20180801174617455?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNzg0ODcxMA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70");
+            Image image = Image.getInstance(ib);
+            //Image image = new Jpeg(baseUrl.toString().getBytes());
+            image.setAlignment(Image.ALIGN_CENTER);
+            image.scalePercent(40); //依照比例缩放
+            document.add(image);
+        }
 
-        // 添加图片
-        Image image = Image.getInstance("https://img-blog.csdn.net/20180801174617455?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNzg0ODcxMA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70");
-        image.setAlignment(Image.ALIGN_CENTER);
-        image.scalePercent(40); //依照比例缩放
+//        image.setAbsolutePosition(420,30);
+
 
         // 表格
-        PdfPTable table = createTable(new float[] { 40, 120, 120, 120, 80, 80 });
+        PdfPTable table = createTable(new float[]{40, 120, 120, 120, 80, 80});
         table.addCell(createCell("美好的一天", headfont, Element.ALIGN_LEFT, 6, false));
         table.addCell(createCell("早上9:00", keyfont, Element.ALIGN_CENTER));
         table.addCell(createCell("中午11:00", keyfont, Element.ALIGN_CENTER));
@@ -119,7 +135,7 @@ public class CreatePDFFile {
             table.addCell(createCell("下午茶", textfont));
             table.addCell(createCell("回家", textfont));
             table.addCell(createCell("吃晚饭", textfont));
-            totalQuantity ++;
+            totalQuantity++;
         }
         table.addCell(createCell("总计", keyfont));
         table.addCell(createCell("", textfont));
@@ -134,13 +150,14 @@ public class CreatePDFFile {
         document.add(gotoP);
         document.add(p1);
         document.add(table);
-        document.add(image);
+
     }
 
 
 /**------------------------创建表格单元格的方法start----------------------------*/
     /**
      * 创建单元格(指定字体)
+     *
      * @param value
      * @param font
      * @return
@@ -152,8 +169,10 @@ public class CreatePDFFile {
         cell.setPhrase(new Phrase(value, font));
         return cell;
     }
+
     /**
      * 创建单元格（指定字体、水平..）
+     *
      * @param value
      * @param font
      * @param align
@@ -166,8 +185,10 @@ public class CreatePDFFile {
         cell.setPhrase(new Phrase(value, font));
         return cell;
     }
+
     /**
      * 创建单元格（指定字体、水平居..、单元格跨x列合并）
+     *
      * @param value
      * @param font
      * @param align
@@ -182,8 +203,10 @@ public class CreatePDFFile {
         cell.setPhrase(new Phrase(value, font));
         return cell;
     }
+
     /**
      * 创建单元格（指定字体、水平居..、单元格跨x列合并、设置单元格内边距）
+     *
      * @param value
      * @param font
      * @param align
@@ -209,8 +232,10 @@ public class CreatePDFFile {
         }
         return cell;
     }
+
     /**
      * 创建单元格（指定字体、水平..、边框宽度：0表示无边框、内边距）
+     *
      * @param value
      * @param font
      * @param align
@@ -241,6 +266,7 @@ public class CreatePDFFile {
 /**--------------------------创建表格的方法start------------------- ---------*/
     /**
      * 创建默认列宽，指定列数、水平(居中、右、左)的表格
+     *
      * @param colNumber
      * @param align
      * @return
@@ -257,8 +283,10 @@ public class CreatePDFFile {
         }
         return table;
     }
+
     /**
      * 创建指定列宽、列数的表格
+     *
      * @param widths
      * @return
      */
@@ -274,8 +302,10 @@ public class CreatePDFFile {
         }
         return table;
     }
+
     /**
      * 创建空白的表格
+     *
      * @return
      */
     public PdfPTable createBlankTable() {

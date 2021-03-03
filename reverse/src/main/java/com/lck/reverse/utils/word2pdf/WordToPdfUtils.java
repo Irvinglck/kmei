@@ -1,4 +1,4 @@
-package com.lck.reverse.utils.updatepdf;
+package com.lck.reverse.utils.word2pdf;
 
 
 import com.aspose.words.Document;
@@ -10,7 +10,6 @@ import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 
 public class WordToPdfUtils {
     private static Logger logger = LoggerFactory.getLogger(WordToPdfUtils.class);
