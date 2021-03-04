@@ -102,9 +102,11 @@ public class CreatePDFFile {
         gotoP.setReference("#top");
         for (int i = 0; i < 3; i++) {
             //图片资源为本地流方式
-            File fileImage=new File("C:\\Users\\Administrator\\Desktop\\ds.jpeg");
+            File fileImage=new File("F:\\dog.jpg");
             FileInputStream fileInputStream = new FileInputStream(fileImage);
-            byte[] ib = new byte[(int)fileImage.length()];
+
+//            byte[] ib = new byte[(int)fileImage.length()];
+            byte[] ib = new byte[fileInputStream.available()];
             fileInputStream.read(ib);
             // 图片资源为网络流的方式
 //        Image image = Image.getInstance("https://img-blog.csdn.net/20180801174617455?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNzg0ODcxMA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70");
