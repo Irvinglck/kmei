@@ -31,6 +31,10 @@ public class WxControllor {
 
     @GetMapping("/getList")
     public String uploadFile() throws FileNotFoundException {
+        //上传
+        //https://cloud.tencent.com/document/product/436/35215#.E7.AE.80.E5.8D.95.E4.B8.8A.E4.BC.A0.E5.AF.B9.E8.B1.A1
+
+
         // 1 初始化用户身份信息（secretId, secretKey）。
         COSCredentials cred = new BasicCOSCredentials(secretId, secretKey);
 // 2 设置 bucket 的区域, COS 地域的简称请参照 https://cloud.tencent.com/document/product/436/6224
@@ -51,16 +55,17 @@ public class WxControllor {
             System.out.println("bucketName == "+bucketName);
             System.out.println("bucketLocation == "+bucketLocation);
         }
-        String filePath="C:\\Users\\luoPe\\Desktop\\ss\\sign.out";
+        String filePath="C:\\Users\\Administrator\\Desktop\\img.jpg";
         // 指定要上传的文件
         File localFile = new File(filePath);
         FileInputStream fileInputStream = new FileInputStream(localFile);
 // 指定要上传到的存储桶
         String bucketName = "km-wx-1304476764";
 // 指定要上传到 COS 上对象键
-        String key = "lckkg/sign1.out";
+//        String key = "lckkg/img.jpg";
+        String key = "img.jpg";
         ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentLength(0);
+        objectMetadata.setContentLength(500);
         PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, key, fileInputStream,objectMetadata);
         PutObjectResult putObjectResult = cosClient.putObject(putObjectRequest);
         System.out.println("---------------");
