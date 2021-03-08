@@ -31,10 +31,6 @@ public class WxControllor {
 
     @GetMapping("/getList")
     public String uploadFile() throws FileNotFoundException {
-        //上传
-        //https://cloud.tencent.com/document/product/436/35215#.E7.AE.80.E5.8D.95.E4.B8.8A.E4.BC.A0.E5.AF.B9.E8.B1.A1
-
-
         // 1 初始化用户身份信息（secretId, secretKey）。
         COSCredentials cred = new BasicCOSCredentials(secretId, secretKey);
 // 2 设置 bucket 的区域, COS 地域的简称请参照 https://cloud.tencent.com/document/product/436/6224
