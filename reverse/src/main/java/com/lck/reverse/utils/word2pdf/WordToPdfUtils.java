@@ -15,7 +15,7 @@ public class WordToPdfUtils {
     private static Logger logger = LoggerFactory.getLogger(WordToPdfUtils.class);
 
     public static void main(String[] args) {
-        doc2pdf("F:\\SD.doc", "F:\\worDDDDDDDDDDDd.pdf");
+        doc2pdf("F:\\demo.doc", "F:\\demo1.pdf");
     }
 
     /**

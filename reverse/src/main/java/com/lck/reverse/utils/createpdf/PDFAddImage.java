@@ -15,7 +15,7 @@ public class PDFAddImage {
     public static void main(String[] args) {
         try {
             // 模板文件路径
-            String templatePath = "F:\\d.pdf";
+            String templatePath = "F:\\demo1.pdf";
             // 生成的文件路径
             String targetPath = "F:\\e.pdf";
             // 书签名
@@ -30,9 +30,15 @@ public class PDFAddImage {
                     targetPath));
             // 提取pdf中的表单
             AcroFields form = stamper.getAcroFields();
-            PdfContentByte  over = stamper.getOverContent(1);
+            //表示在哪一页签字
+            int numberOfPages = reader.getNumberOfPages();
+            PdfContentByte  over = stamper.getOverContent(4);
             form.addSubstitutionFont(BaseFont.createFont("STSong-Light",
                     "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED));
+
+            int pageCount = reader.getNumberOfPages()+1;
+            Rectangle size = reader.getPageSize(1);
+            float pdfY = size.getTop();
 
             // 通过域名获取所在页和坐标，左下角为起点
 //            int pageNo = form.getFieldPositions(fieldName).get(0).page;
@@ -86,7 +92,6 @@ public class PDFAddImage {
                 System.out.println(image.getHeight());
                 System.out.println(image.getScaledHeight());
                 float x = 10;
-
                 // 获取页面的高度
                 Rectangle rectPage = reader.getPageSize(1);
 
