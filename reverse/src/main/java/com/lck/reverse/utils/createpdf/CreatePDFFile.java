@@ -110,26 +110,6 @@ public class CreatePDFFile {
             }
         });
 
-//        for (int i = 0; i < 3; i++) {
-//            //图片资源为本地流方式
-//            File fileImage=new File("F:\\dog.jpg");
-//            FileInputStream fileInputStream = new FileInputStream(fileImage);
-//
-////            byte[] ib = new byte[(int)fileImage.length()];
-//            byte[] ib = new byte[fileInputStream.available()];
-//            fileInputStream.read(ib);
-//            // 图片资源为网络流的方式
-////        Image image = Image.getInstance("https://img-blog.csdn.net/20180801174617455?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNzg0ODcxMA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70");
-//            Image image = Image.getInstance(ib);
-//            //Image image = new Jpeg(baseUrl.toString().getBytes());
-//            image.setAlignment(Image.ALIGN_CENTER);
-//            image.scalePercent(40); //依照比例缩放
-//            document.add(image);
-//        }
-
-//        image.setAbsolutePosition(420,30);
-
-
         // 表格
         PdfPTable table = createTable(new float[]{40, 120, 120, 120, 80, 80});
         table.addCell(createCell("美好的一天", headfont, Element.ALIGN_LEFT, 6, false));
@@ -157,11 +137,11 @@ public class CreatePDFFile {
         table.addCell(createCell("", textfont));
 
         document.add(paragraph);
-        document.add(anchor);
-        document.add(p2);
-        document.add(gotoP);
-        document.add(p1);
-        document.add(table);
+//        document.add(anchor);
+//        document.add(p2);
+//        document.add(gotoP);
+//        document.add(p1);
+//        document.add(table);
 
     }
 
