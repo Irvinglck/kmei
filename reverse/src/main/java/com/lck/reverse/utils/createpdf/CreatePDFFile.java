@@ -10,6 +10,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.List;
 
 
 public class CreatePDFFile {
@@ -19,35 +20,35 @@ public class CreatePDFFile {
 //    https://www.jianshu.com/p/80ddf6a5734b
 //lkc
     // main测试
-    public static void main(String[] args) throws Exception {
-        try {
-            // 1.新建document对象
-            Document document = new Document(PageSize.A4);// 建立一个Document对象
-
-            // 2.建立一个书写器(Writer)与document对象关联
-            File file = new File("F:\\PDFDemoimg.pdf");
-            file.createNewFile();
-            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
-            writer.setPageEvent(new Watermark("HELLO ITEXTPDF"));// 水印
-            writer.setPageEvent(new MyHeaderFooter());// 页眉/页脚
-
-            // 3.打开文档
-            document.open();
-            document.addTitle("Title@PDF-Java");// 标题
-            document.addAuthor("Author@umiz");// 作者
-            document.addSubject("Subject@iText pdf sample");// 主题
-            document.addKeywords("Keywords@iTextpdf");// 关键字
-            document.addCreator("Creator@umiz`s");// 创建者
-
-            // 4.向文档中添加内容
-            new CreatePDFFile().generatePDF(document);
-
-            // 5.关闭文档
-            document.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void main(String[] args) throws Exception {
+//        try {
+//            // 1.新建document对象
+//            Document document = new Document(PageSize.A4);// 建立一个Document对象
+//
+//            // 2.建立一个书写器(Writer)与document对象关联
+//            File file = new File("F:\\PDFDemoimg.pdf");
+//            file.createNewFile();
+//            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
+//            writer.setPageEvent(new Watermark("HELLO ITEXTPDF"));// 水印
+//            writer.setPageEvent(new MyHeaderFooter());// 页眉/页脚
+//
+//            // 3.打开文档
+//            document.open();
+//            document.addTitle("Title@PDF-Java");// 标题
+//            document.addAuthor("Author@umiz");// 作者
+//            document.addSubject("Subject@iText pdf sample");// 主题
+//            document.addKeywords("Keywords@iTextpdf");// 关键字
+//            document.addCreator("Creator@umiz`s");// 创建者
+//
+//            // 4.向文档中添加内容
+//            new CreatePDFFile().generatePDF(document);
+//
+//            // 5.关闭文档
+//            document.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     // 定义全局的字体静态变量
     private static Font titlefont;
@@ -73,7 +74,7 @@ public class CreatePDFFile {
     }
 
     // 生成PDF文件
-    public void generatePDF(Document document) throws Exception {
+    public void generatePDF(Document document, List<Image> images) throws Exception {
 
         // 段落
         Paragraph paragraph = new Paragraph("美好的一天从早起开始！", titlefont);
@@ -100,22 +101,31 @@ public class CreatePDFFile {
         // 定位
         Anchor gotoP = new Anchor("goto");
         gotoP.setReference("#top");
-        for (int i = 0; i < 3; i++) {
-            //图片资源为本地流方式
-            File fileImage=new File("F:\\dog.jpg");
-            FileInputStream fileInputStream = new FileInputStream(fileImage);
 
-//            byte[] ib = new byte[(int)fileImage.length()];
-            byte[] ib = new byte[fileInputStream.available()];
-            fileInputStream.read(ib);
-            // 图片资源为网络流的方式
-//        Image image = Image.getInstance("https://img-blog.csdn.net/20180801174617455?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNzg0ODcxMA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70");
-            Image image = Image.getInstance(ib);
-            //Image image = new Jpeg(baseUrl.toString().getBytes());
-            image.setAlignment(Image.ALIGN_CENTER);
-            image.scalePercent(40); //依照比例缩放
-            document.add(image);
-        }
+        images.forEach(item->{
+            try {
+                document.add(item);
+            } catch (DocumentException e) {
+                e.printStackTrace();
+            }
+        });
+
+//        for (int i = 0; i < 3; i++) {
+//            //图片资源为本地流方式
+//            File fileImage=new File("F:\\dog.jpg");
+//            FileInputStream fileInputStream = new FileInputStream(fileImage);
+//
+////            byte[] ib = new byte[(int)fileImage.length()];
+//            byte[] ib = new byte[fileInputStream.available()];
+//            fileInputStream.read(ib);
+//            // 图片资源为网络流的方式
+////        Image image = Image.getInstance("https://img-blog.csdn.net/20180801174617455?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl8zNzg0ODcxMA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70");
+//            Image image = Image.getInstance(ib);
+//            //Image image = new Jpeg(baseUrl.toString().getBytes());
+//            image.setAlignment(Image.ALIGN_CENTER);
+//            image.scalePercent(40); //依照比例缩放
+//            document.add(image);
+//        }
 
 //        image.setAbsolutePosition(420,30);
 

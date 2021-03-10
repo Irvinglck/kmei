@@ -139,7 +139,7 @@ public class WxControllor {
             document.addCreator("Creator@umiz`s");// 创建者
 
             // 4.向文档中添加内容
-            new CreatePDFFile().generatePDF(document);
+            new CreatePDFFile().generatePDF(document,images);
 
             // 5.关闭文档
             document.close();
@@ -151,35 +151,35 @@ public class WxControllor {
     }
 
     // main测试
-    public static void main(String[] args) throws Exception {
-        try {
-            // 1.新建document对象
-            Document document = new Document(PageSize.A4);// 建立一个Document对象
-
-            // 2.建立一个书写器(Writer)与document对象关联
-            File file = new File("F:\\PDFDemoimg.pdf");
-            file.createNewFile();
-            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
-            writer.setPageEvent(new Watermark("HELLO ITEXTPDF"));// 水印
-            writer.setPageEvent(new MyHeaderFooter());// 页眉/页脚
-
-            // 3.打开文档
-            document.open();
-            document.addTitle("Title@PDF-Java");// 标题
-            document.addAuthor("Author@umiz");// 作者
-            document.addSubject("Subject@iText pdf sample");// 主题
-            document.addKeywords("Keywords@iTextpdf");// 关键字
-            document.addCreator("Creator@umiz`s");// 创建者
-
-            // 4.向文档中添加内容
-            new CreatePDFFile().generatePDF(document);
-
-            // 5.关闭文档
-            document.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void main(String[] args) throws Exception {
+//        try {
+//            // 1.新建document对象
+//            Document document = new Document(PageSize.A4);// 建立一个Document对象
+//
+//            // 2.建立一个书写器(Writer)与document对象关联
+//            File file = new File("F:\\PDFDemoimg.pdf");
+//            file.createNewFile();
+//            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
+//            writer.setPageEvent(new Watermark("HELLO ITEXTPDF"));// 水印
+//            writer.setPageEvent(new MyHeaderFooter());// 页眉/页脚
+//
+//            // 3.打开文档
+//            document.open();
+//            document.addTitle("Title@PDF-Java");// 标题
+//            document.addAuthor("Author@umiz");// 作者
+//            document.addSubject("Subject@iText pdf sample");// 主题
+//            document.addKeywords("Keywords@iTextpdf");// 关键字
+//            document.addCreator("Creator@umiz`s");// 创建者
+//
+//            // 4.向文档中添加内容
+//            new CreatePDFFile().generatePDF(document);
+//
+//            // 5.关闭文档
+//            document.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     //字节流转成byte[] 数组
     private byte [] inputConvetByte(InputStream  ins){
