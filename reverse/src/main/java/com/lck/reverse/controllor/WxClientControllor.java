@@ -8,7 +8,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.lck.reverse.entity.ConstEnum;
 import com.lck.reverse.entity.TConsult;
 import com.lck.reverse.entity.TProAttribute;
-import com.lck.reverse.entity.respon.CommonsResult;
+import com.lck.reverse.entity.respon.ResultMessage;
 import com.lck.reverse.service.WxClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,21 +46,21 @@ public class WxClientControllor {
 
 
     @PostMapping("/consult")
-    public CommonsResult consult(@RequestBody TConsult consult) {
+    public ResultMessage consult(@RequestBody TConsult consult) {
 
         System.out.println(consult.toString());
         return null;
     }
 
     @GetMapping("/one")
-    public CommonsResult consult(@RequestParam(name = "id") Integer id) {
+    public ResultMessage consult(@RequestParam(name = "id") Integer id) {
         System.out.println(wxClientService.getOne(id));
-        return new CommonsResult().setData(wxClientService.getOne(1)).setId(200);
+        return new ResultMessage().setData(wxClientService.getOne(1)).setCode(200);
     }
 
 
     @GetMapping("/print")
-    public CommonsResult print(
+    public ResultMessage print(
             @RequestParam(name="printType") String printType //mutil--多功能机器
     ) {
         //打印类型
@@ -72,7 +72,7 @@ public class WxClientControllor {
             e.printStackTrace();
         }
         if(StringUtils.isEmpty(machineData))
-            return new CommonsResult().setMessage("调用柯美接口异常****"+typeMachine).setId(500);
+            return new ResultMessage().setMsg("调用柯美接口异常****"+typeMachine).setCode(500);
         JSONObject jsonObject = JSON.parseObject(machineData);
         Object message = jsonObject.get("message");
         if(ConstEnum.SUCCESS.getMsg().equals(message)){
@@ -81,8 +81,8 @@ public class WxClientControllor {
             });
             int i = wxClientService.insertBatch(pros);
             if(i>0)
-                return new CommonsResult().setMessage("入库成功").setId(200);
+                return new ResultMessage().setMsg("入库成功").setCode(200);
         }
-        return new CommonsResult().setMessage("调转柯美多接口异常********"+typeMachine).setId(500);
+        return new ResultMessage().setMsg("调转柯美多接口异常********"+typeMachine).setCode(500);
     }
 }
