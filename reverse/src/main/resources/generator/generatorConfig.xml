@@ -18,9 +18,9 @@
         </commentGenerator>
         <!--数据库链接URL，用户名、密码 -->
         <jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
-                        connectionURL="jdbc:mysql://47.103.64.77:3306/signdb"
+                        connectionURL="jdbc:mysql://175.24.234.155:3306/km"
                         userId="root"
-                        password="123456">
+                        password="km@123456">
         </jdbcConnection>
         <!-- 类型转换 -->
         <javaTypeResolver >
@@ -52,7 +52,8 @@
         <!-- 要生成的表 tableName是数据库中的表名或视图名 domainObjectName是实体类名-->
         <!-- <table tableName="risk_model_order" domainObjectName="DSRiskModelOrder" enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false"></table>
          <table tableName="tel_bill_record" domainObjectName="DSTelBillRecord" enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false"></table>-->
-        <table tableName="t_consult"/>
-        <table tableName="t_pro_attribute"/>
+<!--        <table tableName="t_consult"/>-->
+<!--        <table tableName="t_pro_attribute"/>-->
+        <table tableName="t_pro_info"/>
     </context>
 </generatorConfiguration>

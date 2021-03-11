@@ -15,13 +15,14 @@ public class WxClientServiceImpl implements WxClientService {
 
     @Autowired
     private TConsultMapper tConsultMapper;
-
-
     @Autowired
     private TProAttributeMapper tProAttributeMapper;
 
+
+
+
+
     public TConsult getOne(Integer id){
-//        tProAttributeMapper.
         return tConsultMapper.selectByPrimaryKey(id);
     }
 
@@ -29,6 +30,7 @@ public class WxClientServiceImpl implements WxClientService {
     public int insertBatch(List<TProAttribute> pros) {
         return tProAttributeMapper.insertBatch(pros);
     }
+
 
 
 }

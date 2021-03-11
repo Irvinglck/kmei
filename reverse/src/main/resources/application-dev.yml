@@ -1,0 +1,5 @@
+#产品文件临时写到本地目录
+local:
+  product:
+    temp:
+      dir: D:/Download1

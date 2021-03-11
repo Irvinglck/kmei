@@ -1,5 +1,6 @@
 package com.lck.reverse.controllor;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfPCell;
@@ -8,8 +9,10 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.DottedLineSeparator;
 import com.itextpdf.text.pdf.draw.LineSeparator;
 import com.lck.reverse.commons.COSClientConfig;
+import com.lck.reverse.entity.TProInfo;
 import com.lck.reverse.entity.respon.ResultMessage;
-import com.lck.reverse.utils.createpdf.CreatePDFFile;
+import com.lck.reverse.service.TProInfoService;
+import com.lck.reverse.service.WxClientService;
 import com.lck.reverse.utils.createpdf.MyHeaderFooter;
 import com.lck.reverse.utils.createpdf.Watermark;
 import com.qcloud.cos.COSClient;
@@ -19,9 +22,9 @@ import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.model.PutObjectResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,10 +33,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
 @RequestMapping("/wx")
@@ -43,6 +46,9 @@ public class WxControllor {
     private static final String DIR_IMG = "PRODUCT";
     // 指定要上传到的存储桶
     private static final String BUCKET_NAME = "km-wx-1304476764";
+
+    @Value("${local.product.temp.dir}")
+    private String LOCAL_PRODUCT_DIR;
 
     // 定义全局的字体静态变量
     private static Font titlefont;
@@ -70,8 +76,20 @@ public class WxControllor {
     @Autowired
     private COSClientConfig COSClientConfig;
 
+    @Autowired
+    private TProInfoService tProInfoService;
 
-    @GetMapping("/uploadFile")
+
+    @GetMapping("/st")
+    public ResultMessage uploadFile1(
+
+    ) {
+        Page page=new Page(1,10);          //1表示当前页，而10表示每页的显示显示的条目数
+        System.out.println(tProInfoService.selectUserPage(page, "print"));
+        return ResultMessage.getDefaultResultMessage();
+
+    }
+  @GetMapping("/uploadFile")
     public ResultMessage uploadFile(
             @RequestParam(name = "imgFile") MultipartFile imgFile,
             @RequestParam(name = "path") String path
@@ -102,54 +120,130 @@ public class WxControllor {
     public ResultMessage downProPdf(
             @RequestParam(name = "productId") String productId
     ) throws IOException, BadElementException {
+
+        TProInfo tProInfo =null;
+
+
         List<String> prosUrl = Arrays.asList(
-                "https://km-wx-1304476764.cos.ap-nanjing.myqcloud.com/PRODUCT/print/product1.jpg"
-                , "https://km-wx-1304476764.cos.ap-nanjing.myqcloud.com/PRODUCT/print/product2.jpg"
-                , "https://km-wx-1304476764.cos.ap-nanjing.myqcloud.com/PRODUCT/print/product3.jpg");
+                tProInfo.getPicurl1(), tProInfo.getPicurl2(), tProInfo.getPicurl3(), tProInfo.getPicurl4(), tProInfo.getPicurl5(),
+                tProInfo.getPicurl6(), tProInfo.getPicurl7(), tProInfo.getPicurl8(), tProInfo.getPicurl9()
+        );
 
         List<Image> images = new ArrayList<>();
         int i = 1;
         for (String strs : prosUrl) {
             String productName = "product" + (++i);
-            downloadHttpResource(strs, productName, "D:/Download1");
-
-
-            images.add(Image.getInstance("D:/Download1/" + productName+".jpg"));
+            //文件写入本地
+            downloadHttpResource(strs, productName, LOCAL_PRODUCT_DIR);
+            images.add(Image.getInstance(LOCAL_PRODUCT_DIR + "/" + productName + ".jpg"));
         }
 
         try {
             // 1.新建document对象
-            Document document = new Document(PageSize.A4);// 建立一个Document对象
+            Document document = new Document(PageSize.A4);
 
             // 2.建立一个书写器(Writer)与document对象关联
-            File file = new File("D:\\printMachine.pdf");
+            File file = new File(LOCAL_PRODUCT_DIR+"/"+"pdf"+productId+".pdf");
             file.createNewFile();
             PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
-            writer.setPageEvent(new Watermark("HELLO ITEXTPDF"));// 水印
+            writer.setPageEvent(new Watermark("HELLO KM"));// 水印
             writer.setPageEvent(new MyHeaderFooter());// 页眉/页脚
 
             // 3.打开文档
             document.open();
             document.addTitle("Title@PDF-Java");// 标题
-            document.addAuthor("Author@umiz");// 作者
+            document.addAuthor("Author@lck");// 作者
             document.addSubject("Subject@iText pdf sample");// 主题
-            document.addKeywords("Keywords@iTextpdf");// 关键字
-            document.addCreator("Creator@umiz`s");// 创建者
-
-            // 4.向文档中添加内容
-            new CreatePDFFile().generatePDF(document, images);
-
+            document.addKeywords("Keywords@" + productId);// 关键字
+            document.addCreator("Creator@lck");// 创建者
             // 5.关闭文档
             document.close();
+            // 4.向文档中添加内容
+            return generatePDF(document, images) ? ResultMessage.getDefaultResultMessage(200).setMsg("pdf合成成功").setData("https://km-wx-1304476764.cos.ap-nanjing.myqcloud.com/PRODUCT/print/pdf/printMachine.pdf")
+                    : ResultMessage.getDefaultResultMessage(501).setMsg("pdf合成失败");
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return null;
+        return ResultMessage.getDefaultResultMessage(502).setMsg("pdf合成异常");
     }
 
+    // 生成PDF文件
+    private Boolean generatePDF(Document document, List<Image> images) throws Exception {
 
+        // 段落
+        Paragraph paragraph = new Paragraph("柯尼卡美能达", titlefont);
+        paragraph.setAlignment(1); //设置文字居中 0靠左   1，居中     2，靠右
+        paragraph.setIndentationLeft(12); //设置左缩进
+        paragraph.setIndentationRight(12); //设置右缩进
+        paragraph.setFirstLineIndent(24); //设置首行缩进
+        paragraph.setLeading(20f); //行间距
+        paragraph.setSpacingBefore(5f); //设置段落上空白
+        paragraph.setSpacingAfter(10f); //设置段落下空白
 
+        // 直线
+        Paragraph p1 = new Paragraph();
+        p1.add(new Chunk(new LineSeparator()));
+
+        // 点线
+        Paragraph p2 = new Paragraph();
+        p2.add(new Chunk(new DottedLineSeparator()));
+
+        // 超链接
+        Anchor anchor = new Anchor("baidu");
+        anchor.setReference("www.baidu.com");
+
+        // 定位
+        Anchor gotoP = new Anchor("goto");
+        gotoP.setReference("#top");
+        AtomicInteger flag = new AtomicInteger(1);
+        images.forEach(item -> {
+            try {
+                document.add(item);
+                flag.getAndIncrement();
+            } catch (DocumentException e) {
+                e.printStackTrace();
+            }
+        });
+
+        if (flag.get() != images.size()) {
+            log.info("图片文件添加失败");
+            return false;
+        }
+        // 表格
+        PdfPTable table = createTable(new float[]{40, 120, 120, 120, 80, 80});
+        table.addCell(createCell("美好的一天", headfont, Element.ALIGN_LEFT, 6, false));
+        table.addCell(createCell("早上9:00", keyfont, Element.ALIGN_CENTER));
+        table.addCell(createCell("中午11:00", keyfont, Element.ALIGN_CENTER));
+        table.addCell(createCell("中午13:00", keyfont, Element.ALIGN_CENTER));
+        table.addCell(createCell("下午15:00", keyfont, Element.ALIGN_CENTER));
+        table.addCell(createCell("下午17:00", keyfont, Element.ALIGN_CENTER));
+        table.addCell(createCell("晚上19:00", keyfont, Element.ALIGN_CENTER));
+        Integer totalQuantity = 0;
+        for (int i = 0; i < 5; i++) {
+            table.addCell(createCell("起床", textfont));
+            table.addCell(createCell("吃午饭", textfont));
+            table.addCell(createCell("午休", textfont));
+            table.addCell(createCell("下午茶", textfont));
+            table.addCell(createCell("回家", textfont));
+            table.addCell(createCell("吃晚饭", textfont));
+            totalQuantity++;
+        }
+        table.addCell(createCell("总计", keyfont));
+        table.addCell(createCell("", textfont));
+        table.addCell(createCell("", textfont));
+        table.addCell(createCell("", textfont));
+        table.addCell(createCell(String.valueOf(totalQuantity) + "件事", textfont));
+        table.addCell(createCell("", textfont));
+
+        return document.add(paragraph);
+//        document.add(anchor);
+//        document.add(p2);
+//        document.add(gotoP);
+//        document.add(p1);
+//        document.add(table);
+
+    }
 
 
     /**------------------------创建表格单元格的方法start----------------------------*/
@@ -273,10 +367,6 @@ public class WxControllor {
             e.printStackTrace();
         }
     }
-
-
-
-
 
 
     private String getFileName(URL url, String fileName) {
