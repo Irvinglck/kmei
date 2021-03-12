@@ -1,5 +1,7 @@
 package com.lck.reverse.controllor;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.BaseFont;
@@ -13,6 +15,7 @@ import com.lck.reverse.entity.TProInfo;
 import com.lck.reverse.entity.respon.ResultMessage;
 import com.lck.reverse.service.TProInfoService;
 import com.lck.reverse.service.WxClientService;
+import com.lck.reverse.service.impl.TProInfoServiceImpl;
 import com.lck.reverse.utils.createpdf.MyHeaderFooter;
 import com.lck.reverse.utils.createpdf.Watermark;
 import com.qcloud.cos.COSClient;
@@ -77,19 +80,26 @@ public class WxControllor {
     private COSClientConfig COSClientConfig;
 
     @Autowired
-    private TProInfoService tProInfoService;
+    private TProInfoServiceImpl tProInfoService;
 
 
     @GetMapping("/st")
     public ResultMessage uploadFile1(
 
     ) {
-        Page page=new Page(1,10);          //1表示当前页，而10表示每页的显示显示的条目数
+        Page page = new Page(1, 10);          //1表示当前页，而10表示每页的显示显示的条目数
+        Page print = tProInfoService.selectUserPage(page, "print");
+        print.getRecords().forEach(item -> {
+            System.out.println(item);
+        });
+        List<TProInfo> TProInfos = tProInfoService.list(new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid, "productId"));
+
         System.out.println(tProInfoService.selectUserPage(page, "print"));
         return ResultMessage.getDefaultResultMessage();
 
     }
-  @GetMapping("/uploadFile")
+
+    @GetMapping("/uploadFile")
     public ResultMessage uploadFile(
             @RequestParam(name = "imgFile") MultipartFile imgFile,
             @RequestParam(name = "path") String path
@@ -121,9 +131,11 @@ public class WxControllor {
             @RequestParam(name = "productId") String productId
     ) throws IOException, BadElementException {
 
-        TProInfo tProInfo =null;
 
-
+        TProInfo tProInfo = tProInfoService.getOne(new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid, productId));
+        if (tProInfo == null) {
+            return ResultMessage.getDefaultResultMessage(200, "产品id [ " + productId + " ] 没有对应产品");
+        }
         List<String> prosUrl = Arrays.asList(
                 tProInfo.getPicurl1(), tProInfo.getPicurl2(), tProInfo.getPicurl3(), tProInfo.getPicurl4(), tProInfo.getPicurl5(),
                 tProInfo.getPicurl6(), tProInfo.getPicurl7(), tProInfo.getPicurl8(), tProInfo.getPicurl9()
@@ -143,9 +155,9 @@ public class WxControllor {
             Document document = new Document(PageSize.A4);
 
             // 2.建立一个书写器(Writer)与document对象关联
-            File file = new File(LOCAL_PRODUCT_DIR+"/"+"pdf"+productId+".pdf");
-            file.createNewFile();
-            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(file));
+            String pdfPath = LOCAL_PRODUCT_DIR + "/pdf/";
+            createDirs(pdfPath);
+            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(new File(pdfPath + productId + ".pdf")));
             writer.setPageEvent(new Watermark("HELLO KM"));// 水印
             writer.setPageEvent(new MyHeaderFooter());// 页眉/页脚
 
@@ -166,6 +178,16 @@ public class WxControllor {
         }
 
         return ResultMessage.getDefaultResultMessage(502).setMsg("pdf合成异常");
+    }
+
+    private void createDirs(String filePath) {
+        File dir = new File(filePath);
+        if (!dir.exists()) {
+            dir.mkdirs();
+            log.info("[{}] 目录创建完成", filePath);
+        } else {
+            log.info("[{}] 目录已存在", filePath);
+        }
     }
 
     // 生成PDF文件
@@ -355,6 +377,8 @@ public class WxControllor {
      * @return
      */
     public void downloadHttpResource(String urlStr, String fileName, String dir) {
+        if(StringUtils.isEmpty(urlStr))
+            return;
         try {
             URL httpUrl = new URL(urlStr);
             fileName = getFileName(httpUrl, fileName);
