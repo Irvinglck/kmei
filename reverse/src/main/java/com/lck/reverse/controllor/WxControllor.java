@@ -11,10 +11,13 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.DottedLineSeparator;
 import com.itextpdf.text.pdf.draw.LineSeparator;
 import com.lck.reverse.commons.COSClientConfig;
+import com.lck.reverse.entity.HashDemo;
+import com.lck.reverse.entity.TProAttribute;
 import com.lck.reverse.entity.TProInfo;
 import com.lck.reverse.entity.respon.ResultMessage;
 import com.lck.reverse.service.TProInfoService;
 import com.lck.reverse.service.WxClientService;
+import com.lck.reverse.service.impl.TProAttributeServiceImpl;
 import com.lck.reverse.service.impl.TProInfoServiceImpl;
 import com.lck.reverse.utils.createpdf.MyHeaderFooter;
 import com.lck.reverse.utils.createpdf.Watermark;
@@ -28,16 +31,12 @@ import org.apache.commons.io.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -81,6 +80,8 @@ public class WxControllor {
 
     @Autowired
     private TProInfoServiceImpl tProInfoService;
+    @Autowired
+    private TProAttributeServiceImpl tProAttributeService;
 
 
     @GetMapping("/st")
@@ -92,6 +93,7 @@ public class WxControllor {
         print.getRecords().forEach(item -> {
             System.out.println(item);
         });
+        //mybatisplus使用
         List<TProInfo> TProInfos = tProInfoService.list(new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid, "productId"));
 
         System.out.println(tProInfoService.selectUserPage(page, "print"));
@@ -140,10 +142,11 @@ public class WxControllor {
                 tProInfo.getPicurl1(), tProInfo.getPicurl2(), tProInfo.getPicurl3(), tProInfo.getPicurl4(), tProInfo.getPicurl5(),
                 tProInfo.getPicurl6(), tProInfo.getPicurl7(), tProInfo.getPicurl8(), tProInfo.getPicurl9()
         );
-
         List<Image> images = new ArrayList<>();
         int i = 1;
         for (String strs : prosUrl) {
+            if (StringUtils.isEmpty(strs))
+                continue;
             String productName = "product" + (++i);
             //文件写入本地
             downloadHttpResource(strs, productName, LOCAL_PRODUCT_DIR);
@@ -168,10 +171,11 @@ public class WxControllor {
             document.addSubject("Subject@iText pdf sample");// 主题
             document.addKeywords("Keywords@" + productId);// 关键字
             document.addCreator("Creator@lck");// 创建者
+            Boolean aBoolean = generatePDF(document, images);
             // 5.关闭文档
             document.close();
             // 4.向文档中添加内容
-            return generatePDF(document, images) ? ResultMessage.getDefaultResultMessage(200).setMsg("pdf合成成功").setData("https://km-wx-1304476764.cos.ap-nanjing.myqcloud.com/PRODUCT/print/pdf/printMachine.pdf")
+            return aBoolean ? ResultMessage.getDefaultResultMessage(200).setMsg("pdf合成成功").setData("https://km-wx-1304476764.cos.ap-nanjing.myqcloud.com/PRODUCT/print/pdf/printMachine.pdf")
                     : ResultMessage.getDefaultResultMessage(501).setMsg("pdf合成失败");
         } catch (Exception e) {
             e.printStackTrace();
@@ -190,6 +194,51 @@ public class WxControllor {
         }
     }
 
+    @GetMapping("filterPros")
+    public ResultMessage filterPros(
+            @RequestParam(name = "color", required = false, defaultValue = "") String color,
+            @RequestParam(name = "size", required = false, defaultValue = "") String size,
+            @RequestParam(name = "speed", required = false, defaultValue = "") String speed
+    ) {
+
+        Map<String, Object> params = new HashMap<>(5);
+
+        params.put("colour", StringUtils.isEmpty(color)||"undefined".equals(color) ? "" : getColor(color));
+        params.put("outputsizemax", StringUtils.isEmpty(size) || "undefined".equals(size)? "" : getSize(size));
+
+        params.put("lower", StringUtils.isEmpty(speed)||"undefined".equals(speed) ? "" : getRate(speed)[0]);
+        params.put("high", StringUtils.isEmpty(speed)||"undefined".equals(speed) ? "" : getRate(speed)[1]);
+        params.put("startIndex", 1);
+        params.put("pageSize", 4);
+
+
+        return ResultMessage.getDefaultResultMessage(200, tProAttributeService.getTProAttrs(params));
+    }
+    private String getColor(String size) {
+        Map<String, String> paramRate = new HashMap<>(4);
+        paramRate.put("0", "");
+        paramRate.put("1", "黑白");
+        paramRate.put("2", "彩色");
+
+        return paramRate.get(size);
+    }
+    private String getSize(String color) {
+        Map<String, String> paramRate = new HashMap<>(4);
+        paramRate.put("0", "");
+        paramRate.put("1", "A3");
+        paramRate.put("2", "A4");
+        return paramRate.get(color);
+    }
+    private String[] getRate(String speed) {
+        Map<String, String[]> paramRate = new HashMap<>(4);
+        paramRate.put("0", new String[]{"", ""});
+        paramRate.put("1", new String[]{"0", "20"});
+        paramRate.put("2", new String[]{"20", "40"});
+        paramRate.put("3", new String[]{"40", "60"});
+        paramRate.put("4", new String[]{"60", ""});
+        return paramRate.get(speed);
+    }
+
     // 生成PDF文件
     private Boolean generatePDF(Document document, List<Image> images) throws Exception {
 
@@ -201,8 +250,8 @@ public class WxControllor {
         paragraph.setFirstLineIndent(24); //设置首行缩进
         paragraph.setLeading(20f); //行间距
         paragraph.setSpacingBefore(5f); //设置段落上空白
-        paragraph.setSpacingAfter(10f); //设置段落下空白
-
+//        paragraph.setSpacingAfter(10f); //设置段落下空白
+        document.add(paragraph);
         // 直线
         Paragraph p1 = new Paragraph();
         p1.add(new Chunk(new LineSeparator()));
@@ -218,9 +267,11 @@ public class WxControllor {
         // 定位
         Anchor gotoP = new Anchor("goto");
         gotoP.setReference("#top");
-        AtomicInteger flag = new AtomicInteger(1);
+        AtomicInteger flag = new AtomicInteger(0);
         images.forEach(item -> {
             try {
+                item.setAlignment(Image.ALIGN_CENTER);
+                item.scalePercent(55); //依照比例缩放
                 document.add(item);
                 flag.getAndIncrement();
             } catch (DocumentException e) {
@@ -258,7 +309,7 @@ public class WxControllor {
         table.addCell(createCell(String.valueOf(totalQuantity) + "件事", textfont));
         table.addCell(createCell("", textfont));
 
-        return document.add(paragraph);
+        return true;
 //        document.add(anchor);
 //        document.add(p2);
 //        document.add(gotoP);
@@ -377,7 +428,7 @@ public class WxControllor {
      * @return
      */
     public void downloadHttpResource(String urlStr, String fileName, String dir) {
-        if(StringUtils.isEmpty(urlStr))
+        if (StringUtils.isEmpty(urlStr))
             return;
         try {
             URL httpUrl = new URL(urlStr);
