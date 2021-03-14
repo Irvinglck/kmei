@@ -1,6 +1,5 @@
 package com.lck.reverse.controllor;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itextpdf.text.*;
@@ -11,12 +10,9 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.DottedLineSeparator;
 import com.itextpdf.text.pdf.draw.LineSeparator;
 import com.lck.reverse.commons.COSClientConfig;
-import com.lck.reverse.entity.HashDemo;
 import com.lck.reverse.entity.TProAttribute;
 import com.lck.reverse.entity.TProInfo;
 import com.lck.reverse.entity.respon.ResultMessage;
-import com.lck.reverse.service.TProInfoService;
-import com.lck.reverse.service.WxClientService;
 import com.lck.reverse.service.impl.TProAttributeServiceImpl;
 import com.lck.reverse.service.impl.TProInfoServiceImpl;
 import com.lck.reverse.utils.createpdf.MyHeaderFooter;
@@ -31,6 +27,7 @@ import org.apache.commons.io.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cglib.core.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,6 +36,8 @@ import java.net.URL;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/wx")
@@ -194,6 +193,13 @@ public class WxControllor {
         }
     }
 
+    /**
+     * 首页过滤产品
+     * @param color
+     * @param size
+     * @param speed
+     * @return
+     */
     @GetMapping("filterPros")
     public ResultMessage filterPros(
             @RequestParam(name = "color", required = false, defaultValue = "") String color,
@@ -214,6 +220,45 @@ public class WxControllor {
 
         return ResultMessage.getDefaultResultMessage(200, tProAttributeService.getTProAttrs(params));
     }
+
+    /**
+     * 获取产品详情
+     * @param proId
+     * @return
+     */
+    @GetMapping("getProductsDetail")
+    public ResultMessage getProductsDetail(
+            @RequestParam(name="proId") String proId
+    ){
+        TProInfo tProInfo = tProInfoService.getOne(new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid, proId));
+        if(tProInfo==null){
+            return ResultMessage.getDefaultResultMessage(200,"无此对应产品信息");
+        }
+        List<String> prosUrl = Arrays.asList(
+                tProInfo.getPicurl1(), tProInfo.getPicurl2(), tProInfo.getPicurl3(), tProInfo.getPicurl4(), tProInfo.getPicurl5(),
+                tProInfo.getPicurl6(), tProInfo.getPicurl7(), tProInfo.getPicurl8()
+        );
+        List<String> collect = prosUrl.stream().filter(item -> !StringUtils.isEmpty(item)).collect(Collectors.toList());
+        Map<String,Object> result=new HashMap<>();
+        result.put("prosUrl",collect);
+        result.put("proId",proId);
+        return ResultMessage.getDefaultResultMessage(200,"查询成功",result);
+
+    }
+
+    @GetMapping("getProducts")
+    public ResultMessage getProListByType(
+            @RequestParam(name="type") String type
+    ){
+        List<TProAttribute> list = tProAttributeService.list(new QueryWrapper<TProAttribute>().lambda().eq(TProAttribute::getClassid, type));
+        if(list.size()==0){
+            return ResultMessage.getDefaultResultMessage(200,"无此类型对应产品信息");
+        }
+        return ResultMessage.getDefaultResultMessage(200,"查询成功",list);
+    }
+
+
+
     private String getColor(String size) {
         Map<String, String> paramRate = new HashMap<>(4);
         paramRate.put("0", "");
