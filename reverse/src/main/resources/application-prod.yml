@@ -2,7 +2,7 @@ spring:
   #数据库连接
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://175.24.234.155:3306/km?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/km?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: km@123456
   jackson:
@@ -10,12 +10,11 @@ spring:
     time-zone: GMT+8
     serialization:
       write-dates-as-timestamps: false
-
 #产品文件临时写到本地目录
 local:
   product:
     temp:
-      dir: D:/Download1
+      dir: /home/lck
 
 
 logging:

@@ -10,9 +10,12 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.DottedLineSeparator;
 import com.itextpdf.text.pdf.draw.LineSeparator;
 import com.lck.reverse.commons.COSClientConfig;
+import com.lck.reverse.entity.TBannerImg;
 import com.lck.reverse.entity.TProAttribute;
 import com.lck.reverse.entity.TProInfo;
 import com.lck.reverse.entity.respon.ResultMessage;
+import com.lck.reverse.service.impl.BannerImageServiceImpl;
+import com.lck.reverse.service.impl.TNewsServiceImpl;
 import com.lck.reverse.service.impl.TProAttributeServiceImpl;
 import com.lck.reverse.service.impl.TProInfoServiceImpl;
 import com.lck.reverse.utils.createpdf.MyHeaderFooter;
@@ -27,7 +30,6 @@ import org.apache.commons.io.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cglib.core.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,7 +39,6 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/wx")
@@ -81,6 +82,11 @@ public class WxControllor {
     private TProInfoServiceImpl tProInfoService;
     @Autowired
     private TProAttributeServiceImpl tProAttributeService;
+    @Autowired
+    private TNewsServiceImpl tNewsService;
+
+    @Autowired
+    private BannerImageServiceImpl bannerImageService;
 
 
     @GetMapping("/st")
@@ -183,15 +189,7 @@ public class WxControllor {
         return ResultMessage.getDefaultResultMessage(502).setMsg("pdf合成异常");
     }
 
-    private void createDirs(String filePath) {
-        File dir = new File(filePath);
-        if (!dir.exists()) {
-            dir.mkdirs();
-            log.info("[{}] 目录创建完成", filePath);
-        } else {
-            log.info("[{}] 目录已存在", filePath);
-        }
-    }
+
 
     /**
      * 首页过滤产品
@@ -246,6 +244,11 @@ public class WxControllor {
 
     }
 
+    /**
+     * tab产品页
+     * @param type
+     * @return
+     */
     @GetMapping("getProducts")
     public ResultMessage getProListByType(
             @RequestParam(name="type") String type
@@ -257,7 +260,31 @@ public class WxControllor {
         return ResultMessage.getDefaultResultMessage(200,"查询成功",list);
     }
 
+    @GetMapping("getNews")
+    public ResultMessage getNews(
 
+    ){
+        return ResultMessage.getDefaultResultMessage(200,"新闻信息",tNewsService.list());
+    }
+    @GetMapping("getBanner")
+    public ResultMessage getBanner(
+
+    ){
+
+        return ResultMessage.getDefaultResultMessage(200,
+                "新闻信息",
+                bannerImageService.list( ));
+    }
+
+    private void createDirs(String filePath) {
+        File dir = new File(filePath);
+        if (!dir.exists()) {
+            dir.mkdirs();
+            log.info("[{}] 目录创建完成", filePath);
+        } else {
+            log.info("[{}] 目录已存在", filePath);
+        }
+    }
 
     private String getColor(String size) {
         Map<String, String> paramRate = new HashMap<>(4);
