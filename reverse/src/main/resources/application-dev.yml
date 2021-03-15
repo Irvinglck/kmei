@@ -20,4 +20,4 @@ local:
 
 logging:
   level:
-    mapper: debug
+    com.lck.reverse.dao: debug
