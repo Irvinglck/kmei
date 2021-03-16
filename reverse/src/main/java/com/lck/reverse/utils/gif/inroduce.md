@@ -1,0 +1,3 @@
+FileEncodeUitl转码mp4文件，
+GifUtil将视频转成gif（需要先转码，直接转gif会编译报错）
+CutImage用于裁剪图片gif
