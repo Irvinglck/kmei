@@ -172,7 +172,7 @@ public class CutImage {
         int clientHeight = 250;
 
 
-        File file = new File("E:\\sisteree.gif");
+        File file = new File("D:\\sisteree.gif");
         BufferedImage image = ImageIO.read(file);
         double destWidth = image.getWidth();
         double destHeight = image.getHeight();

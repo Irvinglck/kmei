@@ -50,7 +50,7 @@ public class FileEncodeUtil {
 
     public static void main(String[] args) {
         try {
-            System.out.println(encoder("E:\\sister.mp4","E:\\sisteree.mp4"));
+            System.out.println(encoder("D:\\sister.mp4","D:\\sisteree.mp4"));
         } catch (Exception e) {
             e.printStackTrace();
             // TODO: handle exception

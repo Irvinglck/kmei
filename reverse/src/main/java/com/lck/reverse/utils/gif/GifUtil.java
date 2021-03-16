@@ -77,7 +77,7 @@ public class GifUtil {
 
     public static void main(String[] args) {
         try {
-            System.out.println(buildGif("E:\\sisteree.mp4", 5, 50, 6, 2));
+            System.out.println(buildGif("D:\\sisteree.mp4", 5, 50, 6, 2));
         } catch (Exception e) {
             e.printStackTrace();
             // TODO: handle exception
