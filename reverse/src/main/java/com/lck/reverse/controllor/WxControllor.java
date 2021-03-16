@@ -275,6 +275,38 @@ public class WxControllor {
                 "新闻信息",
                 bannerImageService.list( ));
     }
+    /**
+     * 搜索所有产品
+     * @param sValue
+     * @return
+     */
+    @GetMapping("searchMixPro")
+    public ResultMessage searchMixPro(
+            @RequestParam(name="sValue") String sValue
+    ){
+        if(StringUtils.isEmpty(sValue))
+            return ResultMessage.getDefaultResultMessage(200,"收索内容为空");
+        String strs=sValue.length()<=5?sValue:sValue.substring(0,6);
+
+        List<TProAttribute> list = tProAttributeService.list();
+        List<TProAttribute> pros = list.stream().filter(item -> {
+            return item.getClassid().contains(strs)||
+                    item.getCert().contains(strs)||
+                    item.getColour().contains(strs)||
+                    item.getFtitle().contains(strs)||
+                    item.getOutputsizemax().contains(strs)||
+                    item.getOutputSpeedColor().contains(strs)||
+                    item.getOutputSpeedMono().contains(strs)||
+                    item.getPrice().contains(strs)||
+                    item.getSmalltext().contains(strs)||
+                    item.getTitlepic().contains(strs)
+
+                    ;
+        }).collect(Collectors.toList());
+        return ResultMessage.getDefaultResultMessage(200,"收索成功",pros);
+
+    }
+
 
     private void createDirs(String filePath) {
         File dir = new File(filePath);
