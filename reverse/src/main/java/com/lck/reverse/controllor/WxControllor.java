@@ -10,7 +10,6 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.DottedLineSeparator;
 import com.itextpdf.text.pdf.draw.LineSeparator;
 import com.lck.reverse.commons.COSClientConfig;
-import com.lck.reverse.entity.TBannerImg;
 import com.lck.reverse.entity.TProAttribute;
 import com.lck.reverse.entity.TProInfo;
 import com.lck.reverse.entity.respon.ResultMessage;
@@ -30,13 +29,18 @@ import org.apache.commons.io.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -190,9 +194,9 @@ public class WxControllor {
     }
 
 
-
     /**
      * 首页过滤产品
+     *
      * @param color
      * @param size
      * @param speed
@@ -207,11 +211,11 @@ public class WxControllor {
 
         Map<String, Object> params = new HashMap<>(5);
 
-        params.put("colour", StringUtils.isEmpty(color)||"undefined".equals(color) ? "" : getColor(color));
-        params.put("outputsizemax", StringUtils.isEmpty(size) || "undefined".equals(size)? "" : getSize(size));
+        params.put("colour", StringUtils.isEmpty(color) || "undefined".equals(color) ? "" : getColor(color));
+        params.put("outputsizemax", StringUtils.isEmpty(size) || "undefined".equals(size) ? "" : getSize(size));
 
-        params.put("lower", StringUtils.isEmpty(speed)||"undefined".equals(speed) ? "" : getRate(speed)[0]);
-        params.put("high", StringUtils.isEmpty(speed)||"undefined".equals(speed) ? "" : getRate(speed)[1]);
+        params.put("lower", StringUtils.isEmpty(speed) || "undefined".equals(speed) ? "" : getRate(speed)[0]);
+        params.put("high", StringUtils.isEmpty(speed) || "undefined".equals(speed) ? "" : getRate(speed)[1]);
         params.put("startIndex", 1);
         params.put("pageSize", 4);
 
@@ -221,91 +225,109 @@ public class WxControllor {
 
     /**
      * 获取产品详情
+     *
      * @param proId
      * @return
      */
     @GetMapping("getProductsDetail")
     public ResultMessage getProductsDetail(
-            @RequestParam(name="proId") String proId
-    ){
+            @RequestParam(name = "proId") String proId
+    ) {
         TProInfo tProInfo = tProInfoService.getOne(new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid, proId));
-        if(tProInfo==null){
-            return ResultMessage.getDefaultResultMessage(200,"无此对应产品信息");
+        if (tProInfo == null) {
+            return ResultMessage.getDefaultResultMessage(200, "无此对应产品信息");
         }
         List<String> prosUrl = Arrays.asList(
                 tProInfo.getPicurl1(), tProInfo.getPicurl2(), tProInfo.getPicurl3(), tProInfo.getPicurl4(), tProInfo.getPicurl5(),
                 tProInfo.getPicurl6(), tProInfo.getPicurl7(), tProInfo.getPicurl8()
         );
         List<String> collect = prosUrl.stream().filter(item -> !StringUtils.isEmpty(item)).collect(Collectors.toList());
-        Map<String,Object> result=new HashMap<>();
-        result.put("prosUrl",collect);
-        result.put("proId",proId);
-        return ResultMessage.getDefaultResultMessage(200,"查询成功",result);
+        Map<String, Object> result = new HashMap<>();
+        result.put("prosUrl", collect);
+        result.put("proId", proId);
+        return ResultMessage.getDefaultResultMessage(200, "查询成功", result);
 
     }
 
     /**
      * tab产品页
+     *
      * @param type
      * @return
      */
     @GetMapping("getProducts")
     public ResultMessage getProListByType(
-            @RequestParam(name="type") String type
-    ){
+            @RequestParam(name = "type") String type
+    ) {
         List<TProAttribute> list = tProAttributeService.list(new QueryWrapper<TProAttribute>().lambda().eq(TProAttribute::getClassid, type));
-        if(list.size()==0){
-            return ResultMessage.getDefaultResultMessage(200,"无此类型对应产品信息");
+        if (list.size() == 0) {
+            return ResultMessage.getDefaultResultMessage(200, "无此类型对应产品信息");
         }
-        return ResultMessage.getDefaultResultMessage(200,"查询成功",list);
+        return ResultMessage.getDefaultResultMessage(200, "查询成功", list);
     }
 
     @GetMapping("getNews")
     public ResultMessage getNews(
 
-    ){
-        return ResultMessage.getDefaultResultMessage(200,"新闻信息",tNewsService.list());
+    ) {
+        return ResultMessage.getDefaultResultMessage(200, "新闻信息", tNewsService.list());
     }
+
     @GetMapping("getBanner")
     public ResultMessage getBanner(
 
-    ){
+    ) {
 
         return ResultMessage.getDefaultResultMessage(200,
                 "新闻信息",
-                bannerImageService.list( ));
+                bannerImageService.list());
     }
+
     /**
      * 搜索所有产品
+     *
      * @param sValue
      * @return
      */
     @GetMapping("searchMixPro")
     public ResultMessage searchMixPro(
-            @RequestParam(name="sValue") String sValue
-    ){
-        if(StringUtils.isEmpty(sValue))
-            return ResultMessage.getDefaultResultMessage(200,"收索内容为空");
-        String strs=sValue.length()<=5?sValue:sValue.substring(0,6);
+            @RequestParam(name = "sValue") String sValue
+    ) {
+        if (StringUtils.isEmpty(sValue))
+            return ResultMessage.getDefaultResultMessage(200, "收索内容为空");
+        String strs = sValue.length() <= 5 ? sValue : sValue.substring(0, 6);
 
         List<TProAttribute> list = tProAttributeService.list();
-        List<TProAttribute> pros = list.stream().filter(item -> {
-            return item.getClassid().contains(strs)||
-                    item.getCert().contains(strs)||
-                    item.getColour().contains(strs)||
-                    item.getFtitle().contains(strs)||
-                    item.getOutputsizemax().contains(strs)||
-                    item.getOutputSpeedColor().contains(strs)||
-                    item.getOutputSpeedMono().contains(strs)||
-                    item.getPrice().contains(strs)||
-                    item.getSmalltext().contains(strs)||
-                    item.getTitlepic().contains(strs)
+        List<TProAttribute> results = new ArrayList<>();
+        AtomicInteger num = new AtomicInteger(0);
+        for (int i = 0; i < strs.length(); i++) {
 
-                    ;
-        }).collect(Collectors.toList());
-        return ResultMessage.getDefaultResultMessage(200,"收索成功",pros);
+            int andIncrement = num.getAndIncrement();
+            String s = String.valueOf(strs.charAt(andIncrement));
+            List<TProAttribute> pro1 = list.stream().filter(item -> {
+                return item.getClassid().contains(s) ||
+                        item.getCert().contains(s) ||
+                        item.getColour().contains(s) ||
+                        item.getFtitle().contains(s) ||
+                        item.getOutputsizemax().contains(s) ||
+                        item.getOutputSpeedColor().contains(s) ||
+                        item.getOutputSpeedMono().contains(s) ||
+                        item.getPrice().contains(s) ||
+                        item.getSmalltext().contains(s) ||
+                        item.getTitlepic().contains(s);
+
+            }).collect(Collectors.toList());
+
+            results.addAll(pro1);
+        }
+        List<TProAttribute> collect = results.stream().distinct().collect(Collectors.toList());
+        System.out.println(results.size());
+        System.out.println(collect.size());
+        return ResultMessage.getDefaultResultMessage(200, "收索成功", collect);
 
     }
+
+
 
 
     private void createDirs(String filePath) {
@@ -326,6 +348,7 @@ public class WxControllor {
 
         return paramRate.get(size);
     }
+
     private String getSize(String color) {
         Map<String, String> paramRate = new HashMap<>(4);
         paramRate.put("0", "");
@@ -333,6 +356,7 @@ public class WxControllor {
         paramRate.put("2", "A4");
         return paramRate.get(color);
     }
+
     private String[] getRate(String speed) {
         Map<String, String[]> paramRate = new HashMap<>(4);
         paramRate.put("0", new String[]{"", ""});
