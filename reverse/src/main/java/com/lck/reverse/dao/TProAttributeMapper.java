@@ -10,21 +10,9 @@ import org.apache.ibatis.annotations.Param;
 
 public interface TProAttributeMapper extends BaseMapper<TProAttribute> {
 
-    int deleteByPrimaryKey(Integer idattr);
-
 
     int insert(TProAttribute record);
 
-
-    int insertSelective(TProAttribute record);
-
-
-    TProAttribute selectByPrimaryKey(Integer idattr);
-
-
-    int updateByPrimaryKeySelective(TProAttribute record);
-
-    int updateByPrimaryKey(TProAttribute record);
 
     int insertBatch(@Param("pros") List<TProAttribute> pros);
 
