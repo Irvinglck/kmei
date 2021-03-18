@@ -1,0 +1,11 @@
+devServer:{
+  proxy:{
+    "/api":{
+        target:'https://applet.konicaminolta-bcn.cn',
+        changeOrigin:true,
+        pathRewrite:{
+          "^/api":"/"
+          }
+      }
+  }
+}
