@@ -11,5 +11,4 @@ public class TBannerImg {
     private String bUrl;
     private String type;
     private String sort;
-    private String name;
 }
