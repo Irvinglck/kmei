@@ -1,0 +1,10 @@
+spring:
+  profiles:
+      active: prod
+
+km:
+  oos:
+    secretId: AKIDmOjogIkhh38mBJrS7ZlnY4bKowsYnTWX
+    secretKey: 30h7SJyQnCNlsjRuYw5zNU6sQgeMzh4A
+
+
