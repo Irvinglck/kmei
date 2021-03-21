@@ -327,7 +327,23 @@ public class WxControllor {
 
     }
 
+    /**
+     * 查看产品详情
+     *
+     * @param proId
+     * @return
+     */
+    @GetMapping("getProDetail")
+    public ResultMessage getProDetail(
+            @RequestParam(name = "proId") String proId
+    ) {
+        if (StringUtils.isEmpty(proId))
+            return ResultMessage.getDefaultResultMessage(404, "暂无此产品",null);
+        TProInfo one = tProInfoService.getOne(new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid, proId));
+        int resultCode=one==null?404:200;
+        return ResultMessage.getDefaultResultMessage(resultCode,"查询查看产品详情成功", one);
 
+    }
 
 
     private void createDirs(String filePath) {

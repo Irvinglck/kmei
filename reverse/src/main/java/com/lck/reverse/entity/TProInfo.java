@@ -24,6 +24,8 @@ public class TProInfo implements Serializable {
     private String picurl7;
     private String picurl8;
     private String picurl9;
+    private String havepdf;
+    private String downpdf;
     private static final long serialVersionUID = 1L;
 
 

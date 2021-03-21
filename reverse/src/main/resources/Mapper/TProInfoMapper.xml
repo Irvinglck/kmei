@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lck.reverse.dao.TProInfoMapper">
-
     <!-- 通用查询结果列-->
     <sql id="Base_Column_List">
-        id, proId, proName, proType, picUrl1, picUrl2, picUrl3, picUrl4, picUrl5, picUrl6,picUrl7, picUrl8, picUrl9
+        id, proId, proName, proType, picUrl1, picUrl2, picUrl3, picUrl4, picUrl5, picUrl6,picUrl7, picUrl8, picUrl9,havePdf,downPdf
     </sql>
 
     <select id="selectProList" parameterType="java.lang.String" resultType="com.lck.reverse.entity.TProInfo">
