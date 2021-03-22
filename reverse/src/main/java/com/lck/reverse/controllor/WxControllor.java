@@ -10,6 +10,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.DottedLineSeparator;
 import com.itextpdf.text.pdf.draw.LineSeparator;
 import com.lck.reverse.commons.COSClientConfig;
+import com.lck.reverse.entity.TNews;
 import com.lck.reverse.entity.TProAttribute;
 import com.lck.reverse.entity.TProInfo;
 import com.lck.reverse.entity.respon.ResultMessage;
@@ -271,6 +272,17 @@ public class WxControllor {
 
     ) {
         return ResultMessage.getDefaultResultMessage(200, "新闻信息", tNewsService.list());
+    }
+
+    @GetMapping("getNewsIndex")
+    public ResultMessage getNewsIndex(
+
+    ) {
+        List<TNews> list = tNewsService.list();
+        if(list.size()>2){
+            list=list.stream().skip(0).limit(2).collect(Collectors.toList());
+        }
+        return ResultMessage.getDefaultResultMessage(200, "新闻信息", list);
     }
 
     @GetMapping("getBanner")
