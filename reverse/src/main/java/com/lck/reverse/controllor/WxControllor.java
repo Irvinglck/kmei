@@ -116,7 +116,6 @@ public class WxControllor {
             @RequestParam(name = "imgFile") MultipartFile imgFile,
             @RequestParam(name = "path") String path
     ) {
-
         COSClient cosClient = COSClientConfig.getCOSClient();
         String key = DIR_IMG + "/" + path + "/" + imgFile.getOriginalFilename();
         ObjectMetadata objectMetadata = new ObjectMetadata();
