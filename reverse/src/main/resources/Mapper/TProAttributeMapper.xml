@@ -86,4 +86,11 @@
         </if>
         limit ${startIndex} , ${pageSize}
     </select>
+<!-- att.pimg1, pimg2, pimg3, pimg4,-->
+    <select id="getProInfos" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT pro.havePdf,att.id,att.classid,att.title, att.ftitle, att.titlepic, att.smalltext,
+         att.price, att.cert, att.output_speed_color, att.output_speed_mono, att.outputsizemax, att.colour
+        FROM `t_pro_attribute` att left join t_pro_info  pro on att.id=pro.proId
+        limit ${startIndex},${pageSize}
+    </select>
 </mapper>
