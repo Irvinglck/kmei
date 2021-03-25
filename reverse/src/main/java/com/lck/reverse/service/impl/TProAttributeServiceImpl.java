@@ -18,4 +18,7 @@ public class TProAttributeServiceImpl extends ServiceImpl<TProAttributeMapper, T
     public List<TProAttribute> getTProAttrs(Map<String, Object> params){
         return tProAttributeMapper.getTProAttrs(params);
     }
+    public List<Map<String,Object>> getProInfos(Map<String, Object> params){
+        return tProAttributeMapper.getProInfos(params);
+    }
 }

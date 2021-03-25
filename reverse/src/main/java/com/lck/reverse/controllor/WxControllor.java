@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
@@ -111,6 +112,7 @@ public class WxControllor {
 
     }
 
+
     @GetMapping("/uploadFile")
     public ResultMessage uploadFile(
             @RequestParam(name = "imgFile") MultipartFile imgFile,
@@ -132,16 +134,15 @@ public class WxControllor {
     }
 
     /**
-     * 下载pdf
+     * 生成pdf&上传pdf
      *
      * @param productId
      * @return
      */
-    @GetMapping("/downProPdf")
-    public ResultMessage downProPdf(
+    @GetMapping("/creatPdfUp")
+    public ResultMessage creatPdfUp(
             @RequestParam(name = "productId") String productId
     ) throws IOException, BadElementException {
-
 
         TProInfo tProInfo = tProInfoService.getOne(new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid, productId));
         if (tProInfo == null) {
@@ -157,22 +158,20 @@ public class WxControllor {
             if (StringUtils.isEmpty(strs))
                 continue;
             String productName = "product" + (++i);
-            //文件写入本地
+            //下载文件写入本地
             downloadHttpResource(strs, productName, LOCAL_PRODUCT_DIR);
             images.add(Image.getInstance(LOCAL_PRODUCT_DIR + "/" + productName + ".jpg"));
         }
-
         try {
             // 1.新建document对象
             Document document = new Document(PageSize.A4);
-
             // 2.建立一个书写器(Writer)与document对象关联
             String pdfPath = LOCAL_PRODUCT_DIR + "/pdf/";
+            String pdfName = productId + ".pdf";
             createDirs(pdfPath);
-            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(new File(pdfPath + productId + ".pdf")));
+            PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(new File(pdfPath + pdfName)));
             writer.setPageEvent(new Watermark("HELLO KM"));// 水印
             writer.setPageEvent(new MyHeaderFooter());// 页眉/页脚
-
             // 3.打开文档
             document.open();
             document.addTitle("Title@PDF-Java");// 标题
@@ -180,11 +179,13 @@ public class WxControllor {
             document.addSubject("Subject@iText pdf sample");// 主题
             document.addKeywords("Keywords@" + productId);// 关键字
             document.addCreator("Creator@lck");// 创建者
+            //生成pdf
             Boolean aBoolean = generatePDF(document, images);
             // 5.关闭文档
             document.close();
-            // 4.向文档中添加内容
-            return aBoolean ? ResultMessage.getDefaultResultMessage(200).setMsg("pdf合成成功").setData("https://km-wx-1304476764.cos.ap-nanjing.myqcloud.com/PRODUCT/print/pdf/printMachine.pdf")
+            //上传pdf
+            uploadLocalPdf(pdfPath, pdfName);
+            return aBoolean ? ResultMessage.getDefaultResultMessage(200).setMsg("pdf合成成功").setData("https://km-wx-1304476764.cos.ap-nanjing.myqcloud.com/PRODUCT/pdf/" + productId + ".pdf")
                     : ResultMessage.getDefaultResultMessage(501).setMsg("pdf合成失败");
         } catch (Exception e) {
             e.printStackTrace();
@@ -193,6 +194,27 @@ public class WxControllor {
         return ResultMessage.getDefaultResultMessage(502).setMsg("pdf合成异常");
     }
 
+    //上传本地文件
+    private String uploadLocalPdf(String filePath, String pdfName) {
+        COSClient cosClient = COSClientConfig.getCOSClient();
+        //远程地址路径
+        String key = DIR_IMG + "/pdf/" + pdfName;
+        log.info("上传文件系统目录以及文件名称 [{}]", key);
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        PutObjectRequest putObjectRequest = null;
+        PutObjectResult putObjectResult = null;
+        try {
+            String localFilePath = filePath + pdfName;
+            log.info("开始上传[{}] 文件,文件本地全路径 [{}]", pdfName, localFilePath);
+            FileInputStream ins = new FileInputStream(new File(localFilePath));
+            putObjectRequest = new PutObjectRequest(BUCKET_NAME, key, ins, objectMetadata);
+            cosClient.putObject(putObjectRequest);
+            return pdfName;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     /**
      * 首页过滤产品
@@ -278,8 +300,8 @@ public class WxControllor {
 
     ) {
         List<TNews> list = tNewsService.list();
-        if(list.size()>2){
-            list=list.stream().skip(0).limit(2).collect(Collectors.toList());
+        if (list.size() > 2) {
+            list = list.stream().skip(0).limit(2).collect(Collectors.toList());
         }
         return ResultMessage.getDefaultResultMessage(200, "新闻信息", list);
     }
@@ -349,10 +371,10 @@ public class WxControllor {
             @RequestParam(name = "proId") String proId
     ) {
         if (StringUtils.isEmpty(proId))
-            return ResultMessage.getDefaultResultMessage(404, "暂无此产品",null);
+            return ResultMessage.getDefaultResultMessage(404, "暂无此产品", null);
         TProInfo one = tProInfoService.getOne(new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid, proId));
-        int resultCode=one==null?404:200;
-        return ResultMessage.getDefaultResultMessage(resultCode,"查询查看产品详情成功", one);
+        int resultCode = one == null ? 404 : 200;
+        return ResultMessage.getDefaultResultMessage(resultCode, "查询查看产品详情成功", one);
 
     }
 
@@ -407,21 +429,7 @@ public class WxControllor {
         paragraph.setSpacingBefore(5f); //设置段落上空白
 //        paragraph.setSpacingAfter(10f); //设置段落下空白
         document.add(paragraph);
-        // 直线
-        Paragraph p1 = new Paragraph();
-        p1.add(new Chunk(new LineSeparator()));
 
-        // 点线
-        Paragraph p2 = new Paragraph();
-        p2.add(new Chunk(new DottedLineSeparator()));
-
-        // 超链接
-        Anchor anchor = new Anchor("baidu");
-        anchor.setReference("www.baidu.com");
-
-        // 定位
-        Anchor gotoP = new Anchor("goto");
-        gotoP.setReference("#top");
         AtomicInteger flag = new AtomicInteger(0);
         images.forEach(item -> {
             try {
@@ -438,39 +446,49 @@ public class WxControllor {
             log.info("图片文件添加失败");
             return false;
         }
+// 直线
+//        Paragraph p1 = new Paragraph();
+//        p1.add(new Chunk(new LineSeparator()));
+//        // 点线
+//        Paragraph p2 = new Paragraph();
+//        p2.add(new Chunk(new DottedLineSeparator()));
+//        // 超链接
+//        Anchor anchor = new Anchor("baidu");
+//        anchor.setReference("www.baidu.com");
+//        // 定位
+//        Anchor gotoP = new Anchor("goto");
+//        gotoP.setReference("#top");
         // 表格
-        PdfPTable table = createTable(new float[]{40, 120, 120, 120, 80, 80});
-        table.addCell(createCell("美好的一天", headfont, Element.ALIGN_LEFT, 6, false));
-        table.addCell(createCell("早上9:00", keyfont, Element.ALIGN_CENTER));
-        table.addCell(createCell("中午11:00", keyfont, Element.ALIGN_CENTER));
-        table.addCell(createCell("中午13:00", keyfont, Element.ALIGN_CENTER));
-        table.addCell(createCell("下午15:00", keyfont, Element.ALIGN_CENTER));
-        table.addCell(createCell("下午17:00", keyfont, Element.ALIGN_CENTER));
-        table.addCell(createCell("晚上19:00", keyfont, Element.ALIGN_CENTER));
-        Integer totalQuantity = 0;
-        for (int i = 0; i < 5; i++) {
-            table.addCell(createCell("起床", textfont));
-            table.addCell(createCell("吃午饭", textfont));
-            table.addCell(createCell("午休", textfont));
-            table.addCell(createCell("下午茶", textfont));
-            table.addCell(createCell("回家", textfont));
-            table.addCell(createCell("吃晚饭", textfont));
-            totalQuantity++;
-        }
-        table.addCell(createCell("总计", keyfont));
-        table.addCell(createCell("", textfont));
-        table.addCell(createCell("", textfont));
-        table.addCell(createCell("", textfont));
-        table.addCell(createCell(String.valueOf(totalQuantity) + "件事", textfont));
-        table.addCell(createCell("", textfont));
-
-        return true;
+//        PdfPTable table = createTable(new float[]{40, 120, 120, 120, 80, 80});
+//        table.addCell(createCell("美好的一天", headfont, Element.ALIGN_LEFT, 6, false));
+//        table.addCell(createCell("早上9:00", keyfont, Element.ALIGN_CENTER));
+//        table.addCell(createCell("中午11:00", keyfont, Element.ALIGN_CENTER));
+//        table.addCell(createCell("中午13:00", keyfont, Element.ALIGN_CENTER));
+//        table.addCell(createCell("下午15:00", keyfont, Element.ALIGN_CENTER));
+//        table.addCell(createCell("下午17:00", keyfont, Element.ALIGN_CENTER));
+//        table.addCell(createCell("晚上19:00", keyfont, Element.ALIGN_CENTER));
+//        Integer totalQuantity = 0;
+//        for (int i = 0; i < 5; i++) {
+//            table.addCell(createCell("起床", textfont));
+//            table.addCell(createCell("吃午饭", textfont));
+//            table.addCell(createCell("午休", textfont));
+//            table.addCell(createCell("下午茶", textfont));
+//            table.addCell(createCell("回家", textfont));
+//            table.addCell(createCell("吃晚饭", textfont));
+//            totalQuantity++;
+//        }
+//        table.addCell(createCell("总计", keyfont));
+//        table.addCell(createCell("", textfont));
+//        table.addCell(createCell("", textfont));
+//        table.addCell(createCell("", textfont));
+//        table.addCell(createCell(String.valueOf(totalQuantity) + "件事", textfont));
+//        table.addCell(createCell("", textfont));
 //        document.add(anchor);
 //        document.add(p2);
 //        document.add(gotoP);
 //        document.add(p1);
 //        document.add(table);
-
+        return true;
     }
 
 

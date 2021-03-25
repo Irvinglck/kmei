@@ -17,4 +17,6 @@ public interface TProAttributeMapper extends BaseMapper<TProAttribute> {
     int insertBatch(@Param("pros") List<TProAttribute> pros);
 
     List<TProAttribute> getTProAttrs(Map<String, Object> params);
+
+    List<Map<String,Object>> getProInfos(Map<String,Object> params);
 }
