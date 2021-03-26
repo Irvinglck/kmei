@@ -1,10 +1,13 @@
 package com.lck.reverse.controllor;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lck.reverse.commons.COSClientConfig;
 import com.lck.reverse.entity.EnumFilePath;
 import com.lck.reverse.entity.TBannerImg;
 import com.lck.reverse.entity.TNews;
+import com.lck.reverse.entity.TProAttribute;
+import com.lck.reverse.entity.respon.PageInfo;
 import com.lck.reverse.entity.respon.ResultMessage;
 import com.lck.reverse.service.impl.BannerImageServiceImpl;
 import com.lck.reverse.service.impl.TNewsServiceImpl;
@@ -24,6 +27,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -114,7 +118,10 @@ public class WxBsmControllor {
         params.put("startIndex",startIndex);
         params.put("pageSize",pageSize);
         try {
-            return ResultMessage.getDefaultResultMessage(200,tProAttributeService.getProInfos(params));
+            List<Map<String, Object>> proInfos = tProAttributeService.getProInfos(params);
+            Integer proInfosCount = tProAttributeService.getProInfosCount();
+            PageInfo<Map<String, Object>> result=new PageInfo<>(Integer.parseInt(startIndex),Integer.parseInt(pageSize),proInfosCount,proInfos);
+            return ResultMessage.getDefaultResultMessage(200,result);
         }catch (Exception e){
             e.printStackTrace();
         }

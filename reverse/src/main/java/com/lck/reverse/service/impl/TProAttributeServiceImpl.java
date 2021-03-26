@@ -1,5 +1,6 @@
 package com.lck.reverse.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lck.reverse.dao.TProAttributeMapper;
 import com.lck.reverse.entity.TProAttribute;
@@ -18,7 +19,10 @@ public class TProAttributeServiceImpl extends ServiceImpl<TProAttributeMapper, T
     public List<TProAttribute> getTProAttrs(Map<String, Object> params){
         return tProAttributeMapper.getTProAttrs(params);
     }
-    public List<Map<String,Object>> getProInfos(Map<String, Object> params){
+    public List<Map<String,Object>> getProInfos( Map<String, Object> params){
         return tProAttributeMapper.getProInfos(params);
+    }
+    public Integer getProInfosCount(){
+        return tProAttributeMapper.getProInfosCount();
     }
 }
