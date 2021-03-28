@@ -92,10 +92,21 @@
         SELECT pro.havePdf,att.id,att.classid,att.title, att.ftitle, att.titlepic, att.smalltext,
          att.price, att.cert, att.output_speed_color, att.output_speed_mono, att.outputsizemax, att.colour
         FROM `t_pro_attribute` att left join t_pro_info  pro on att.id=pro.proId
+        <where>
+            <if test="proName != null and proName !=''">
+                ftitle like CONCAT('%',#{proName},'%')
+            </if>
+        </where>
+        order by att.idAttr desc
         limit ${startIndex},${pageSize}
     </select>
-    <select id="getProInfosCount"  resultType="java.lang.Integer">
+    <select id="getProInfosCount" parameterType="java.util.HashMap" resultType="java.lang.Integer">
         SELECT count(1)
         FROM `t_pro_attribute` att left join t_pro_info  pro on att.id=pro.proId
+        <where>
+            <if test="proName != null and proName !=''">
+                ftitle like CONCAT('%',#{proName},'%')
+            </if>
+        </where>
     </select>
 </mapper>

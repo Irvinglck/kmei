@@ -22,7 +22,7 @@ public class TProAttributeServiceImpl extends ServiceImpl<TProAttributeMapper, T
     public List<Map<String,Object>> getProInfos( Map<String, Object> params){
         return tProAttributeMapper.getProInfos(params);
     }
-    public Integer getProInfosCount(){
-        return tProAttributeMapper.getProInfosCount();
+    public Integer getProInfosCount(Map<String, Object> params){
+        return tProAttributeMapper.getProInfosCount(params);
     }
 }
