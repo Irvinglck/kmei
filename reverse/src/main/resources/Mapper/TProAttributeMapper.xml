@@ -89,9 +89,9 @@
 <!-- att.pimg1, pimg2, pimg3, pimg4,-->
 <!-- limit ${startIndex},${pageSize}-->
     <select id="getProInfos" parameterType="java.util.HashMap" resultType="java.util.HashMap">
-        SELECT pro.havePdf,att.id,att.classid,att.title, att.ftitle, att.titlepic, att.smalltext,
+        SELECT pro.havePdf,pro.haveImg,att.id,att.idAttr,att.classid,att.title, att.ftitle, att.titlepic, att.smalltext,
          att.price, att.cert, att.output_speed_color, att.output_speed_mono, att.outputsizemax, att.colour
-        FROM `t_pro_attribute` att left join t_pro_info  pro on att.id=pro.proId
+        FROM `t_pro_attribute` att left join t_pro_info  pro on att.idAttr=pro.proId
         <where>
             <if test="proName != null and proName !=''">
                 ftitle like CONCAT('%',#{proName},'%')

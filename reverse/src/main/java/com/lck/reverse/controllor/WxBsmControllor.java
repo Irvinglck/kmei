@@ -3,6 +3,7 @@ package com.lck.reverse.controllor;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.itextpdf.text.BadElementException;
 import com.lck.reverse.commons.COSClientConfig;
 import com.lck.reverse.entity.*;
 import com.lck.reverse.entity.respon.PageInfo;
@@ -29,6 +30,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/bsm")
@@ -242,6 +244,27 @@ public class WxBsmControllor {
         return obj;
     }
 
+    /**
+     *
+     * @param proId
+     * @return
+     */
+    @GetMapping("/getProImgs")
+    public ResultMessage getProImgs(
+            @RequestParam(name = "proId") String proId
+    ) {
+
+        TProInfo tProInfo = tProInfoService.getOne(new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid, proId));
+        if (tProInfo == null) {
+            return ResultMessage.getDefaultResultMessage(500, "产品id [ " + proId + " ] 没有对应产品");
+        }
+        List<String> prosUrl = Arrays.asList(
+                tProInfo.getPicurl1(), tProInfo.getPicurl2(), tProInfo.getPicurl3(), tProInfo.getPicurl4(), tProInfo.getPicurl5(),
+                tProInfo.getPicurl6(), tProInfo.getPicurl7(), tProInfo.getPicurl8()
+        );
+        List<String> res = prosUrl.stream().filter(item -> !StringUtils.isEmpty(item)).collect(Collectors.toList());
+        return ResultMessage.getDefaultResultMessage(200, "返回成功",res);
+    }
 
     /**
      * 根据类型上传文件
