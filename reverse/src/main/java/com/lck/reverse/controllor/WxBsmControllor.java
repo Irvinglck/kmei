@@ -1,5 +1,6 @@
 package com.lck.reverse.controllor;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lck.reverse.commons.COSClientConfig;
@@ -24,6 +25,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -171,13 +174,25 @@ public class WxBsmControllor {
     @PostMapping("uploadFiles")
     public ResultMessage uploadFiles(
             @RequestParam(name = "files") MultipartFile[] files,
-            @RequestParam(name = "userName") String userName
+            @RequestParam(name = "proDes") String proDes
     ) {
-       if(files.length==0){
-           return ResultMessage.getDefaultResultMessage(200,"无选中文件");
-       }
-       List<String> params=new ArrayList<>();
-        for (MultipartFile file: files) {
+        if (files.length == 0) {
+            return ResultMessage.getDefaultResultMessage(500, "无选中文件");
+        }
+        if(files.length>8){
+            return ResultMessage.getDefaultResultMessage(500, "最多只能上传8张图片");
+        }
+        JSONObject jsonObject = JSONObject.parseObject(proDes);
+        String proName = jsonObject.getString("proName");
+        String idAttr = jsonObject.getString("idAttr");
+        if(StringUtils.isEmpty(proName)||StringUtils.isEmpty(idAttr)){
+            log.info("idAttr:[{}],proName:[{}] 值有为空 ",idAttr,proName);
+            return ResultMessage.getDefaultResultMessage(500, "idAttr:[{"+idAttr+"}],proName:[{"+proName+"}] 值有为空");
+        }
+        List<String> params = new ArrayList<>();
+        Map<String,Object> maps=new HashMap<>(8);
+        int i=1;
+        for (MultipartFile file : files) {
             String pathFile = EnumFilePath.PRODUCT.getValue();
             COSClient cosClient = COSClientConfig.getCOSClient();
             //文件名称
@@ -190,13 +205,43 @@ public class WxBsmControllor {
                 putObjectRequest = new PutObjectRequest(BUCKET_NAME, key, file.getInputStream(), objectMetadata);
                 cosClient.putObject(putObjectRequest);
                 params.add(key);
+                maps.put("picurl"+i,KM_DOMAIN_NAME+"/"+key);
+                i++;
             } catch (IOException e) {
                 log.error("类型[ {} ]文件上传失败", fileName);
                 e.printStackTrace();
             }
+
         }
-        return ResultMessage.getDefaultResultMessage(200,"上传成功",params);
+        try {
+            TProInfo tProInfo = (TProInfo) mapToObject(maps, TProInfo.class);
+            tProInfo.setProid(idAttr);
+            tProInfo.setProname(proName);
+            tProInfo.setHaveimg("true");
+            log.info("TProInfo映射之后的值为[{}]",tProInfo.toString());
+            tProInfoService.saveOrUpdate(tProInfo);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ResultMessage.getDefaultResultMessage(200, "上传成功", params);
     }
+
+    private Object mapToObject(Map<String, Object> map, Class<?> beanClass) throws Exception {
+        if (map == null)
+            return null;
+        Object obj = beanClass.newInstance();
+        Field[] fields = obj.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            int mod = field.getModifiers();
+            if (Modifier.isStatic(mod) || Modifier.isFinal(mod)) {
+                continue;
+            }
+            field.setAccessible(true);
+            field.set(obj, map.get(field.getName()));
+        }
+        return obj;
+    }
+
 
     /**
      * 根据类型上传文件
@@ -218,7 +263,7 @@ public class WxBsmControllor {
         }
         switch (fileType) {
             case "banner":
-                saveBanner(result,bannerName);
+                saveBanner(result, bannerName);
                 break;
             case "pro":
                 saveProduct();
@@ -242,7 +287,6 @@ public class WxBsmControllor {
     }
 
 
-
     private void saveBanner(String result, String bannerName) {
         bannerImageService.save(new TBannerImg()
                 .setId(null)
@@ -251,7 +295,6 @@ public class WxBsmControllor {
                 .setName(bannerName)
                 .setType(EnumFilePath.BANNER.getMsg()));
     }
-
 
 
     private String getDateTimeStr() {

@@ -150,7 +150,7 @@ public class WxControllor {
         }
         List<String> prosUrl = Arrays.asList(
                 tProInfo.getPicurl1(), tProInfo.getPicurl2(), tProInfo.getPicurl3(), tProInfo.getPicurl4(), tProInfo.getPicurl5(),
-                tProInfo.getPicurl6(), tProInfo.getPicurl7(), tProInfo.getPicurl8(), tProInfo.getPicurl9()
+                tProInfo.getPicurl6(), tProInfo.getPicurl7(), tProInfo.getPicurl8()
         );
         List<Image> images = new ArrayList<>();
         int i = 1;
