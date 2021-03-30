@@ -230,7 +230,7 @@ public class WxBsmControllor {
             tProInfo.setProname(proName);
             tProInfo.setHaveimg("true");
             log.info("TProInfo映射之后的值为[{}]", tProInfo.toString());
-            tProInfoService.saveOrUpdate(tProInfo);
+            tProInfoService.saveOrUpdate(tProInfo,new UpdateWrapper<TProInfo>().lambda().eq(TProInfo::getProid,idAttr));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -257,7 +257,7 @@ public class WxBsmControllor {
         if (tProInfo == null) {
             return ResultMessage.getDefaultResultMessage(500, "反射赋值失败");
         }
-        if(isLastOne(tProInfo))
+        if(!isLastOne(tProInfo))
             tProInfo.setHaveimg("false");
         boolean result = tProInfoService.update(tProInfo, new UpdateWrapper<TProInfo>().lambda().eq(TProInfo::getProid, proId));
         return result ? ResultMessage.getDefaultResultMessage(200, "删除成功") :
@@ -273,9 +273,9 @@ public class WxBsmControllor {
                 !StringUtils.isEmpty(tProInfo.getPicurl6())||
                 !StringUtils.isEmpty(tProInfo.getPicurl7())||
                 !StringUtils.isEmpty(tProInfo.getPicurl8())){
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
 
