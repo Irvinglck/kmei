@@ -7,6 +7,9 @@ spring:
     url: jdbc:mysql://175.24.234.155:3306/km?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: km@123456
+    hikari:
+      max-lifetime: 500000
+
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8

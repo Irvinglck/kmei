@@ -1,7 +1,9 @@
 package com.lck.reverse.controllor;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itextpdf.text.BadElementException;
 import com.lck.reverse.commons.COSClientConfig;
@@ -13,6 +15,8 @@ import com.lck.reverse.service.impl.BannerImageServiceImpl;
 import com.lck.reverse.service.impl.TNewsServiceImpl;
 import com.lck.reverse.service.impl.TProAttributeServiceImpl;
 import com.lck.reverse.service.impl.TProInfoServiceImpl;
+import com.lck.reverse.utils.map2bean.MapBeanConvert;
+import com.lck.reverse.utils.reflect.Reflect;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.model.PutObjectRequest;
@@ -22,14 +26,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.codehaus.plexus.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -181,19 +189,19 @@ public class WxBsmControllor {
         if (files.length == 0) {
             return ResultMessage.getDefaultResultMessage(500, "无选中文件");
         }
-        if(files.length>8){
+        if (files.length > 8) {
             return ResultMessage.getDefaultResultMessage(500, "最多只能上传8张图片");
         }
         JSONObject jsonObject = JSONObject.parseObject(proDes);
         String proName = jsonObject.getString("proName");
         String idAttr = jsonObject.getString("idAttr");
-        if(StringUtils.isEmpty(proName)||StringUtils.isEmpty(idAttr)){
-            log.info("idAttr:[{}],proName:[{}] 值有为空 ",idAttr,proName);
-            return ResultMessage.getDefaultResultMessage(500, "idAttr:[{"+idAttr+"}],proName:[{"+proName+"}] 值有为空");
+        if (StringUtils.isEmpty(proName) || StringUtils.isEmpty(idAttr)) {
+            log.info("idAttr:[{}],proName:[{}] 值有为空 ", idAttr, proName);
+            return ResultMessage.getDefaultResultMessage(500, "idAttr:[{" + idAttr + "}],proName:[{" + proName + "}] 值有为空");
         }
         List<String> params = new ArrayList<>();
-        Map<String,Object> maps=new HashMap<>(8);
-        int i=1;
+        Map<String, Object> maps = new HashMap<>(8);
+        int i = 1;
         for (MultipartFile file : files) {
             String pathFile = EnumFilePath.PRODUCT.getValue();
             COSClient cosClient = COSClientConfig.getCOSClient();
@@ -207,7 +215,7 @@ public class WxBsmControllor {
                 putObjectRequest = new PutObjectRequest(BUCKET_NAME, key, file.getInputStream(), objectMetadata);
                 cosClient.putObject(putObjectRequest);
                 params.add(key);
-                maps.put("picurl"+i,KM_DOMAIN_NAME+"/"+key);
+                maps.put("picurl" + i, KM_DOMAIN_NAME + "/" + key);
                 i++;
             } catch (IOException e) {
                 log.error("类型[ {} ]文件上传失败", fileName);
@@ -216,11 +224,12 @@ public class WxBsmControllor {
 
         }
         try {
-            TProInfo tProInfo = (TProInfo) mapToObject(maps, TProInfo.class);
+            //map 2 bean
+            TProInfo tProInfo = (TProInfo) MapBeanConvert.mapToObject(maps, TProInfo.class);
             tProInfo.setProid(idAttr);
             tProInfo.setProname(proName);
             tProInfo.setHaveimg("true");
-            log.info("TProInfo映射之后的值为[{}]",tProInfo.toString());
+            log.info("TProInfo映射之后的值为[{}]", tProInfo.toString());
             tProInfoService.saveOrUpdate(tProInfo);
         } catch (Exception e) {
             e.printStackTrace();
@@ -228,24 +237,49 @@ public class WxBsmControllor {
         return ResultMessage.getDefaultResultMessage(200, "上传成功", params);
     }
 
-    private Object mapToObject(Map<String, Object> map, Class<?> beanClass) throws Exception {
-        if (map == null)
-            return null;
-        Object obj = beanClass.newInstance();
-        Field[] fields = obj.getClass().getDeclaredFields();
-        for (Field field : fields) {
-            int mod = field.getModifiers();
-            if (Modifier.isStatic(mod) || Modifier.isFinal(mod)) {
-                continue;
-            }
-            field.setAccessible(true);
-            field.set(obj, map.get(field.getName()));
+    /**
+     * 更新图片
+     *
+     * @param flagId
+     * @param
+     * @return
+     */
+    @GetMapping("/updateInfo")
+    public ResultMessage updateInfo(
+            @RequestParam(name = "flagId") String flagId,
+            @RequestParam(name = "proId") String proId
+    ) {
+        if (StringUtils.isEmpty(flagId)) {
+            return ResultMessage.getDefaultResultMessage(500, "入参未赋值");
         }
-        return obj;
+        TProInfo one = tProInfoService.getOne(new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid, proId));
+        TProInfo tProInfo = Reflect.reflectByObj(one, flagId);
+        if (tProInfo == null) {
+            return ResultMessage.getDefaultResultMessage(500, "反射赋值失败");
+        }
+        if(isLastOne(tProInfo))
+            tProInfo.setHaveimg("false");
+        boolean result = tProInfoService.update(tProInfo, new UpdateWrapper<TProInfo>().lambda().eq(TProInfo::getProid, proId));
+        return result ? ResultMessage.getDefaultResultMessage(200, "删除成功") :
+                ResultMessage.getDefaultResultMessage(500, "删除失败");
     }
 
+    private boolean isLastOne(TProInfo tProInfo) {
+        if(!StringUtils.isEmpty(tProInfo.getPicurl1())||
+                !StringUtils.isEmpty(tProInfo.getPicurl2())||
+                !StringUtils.isEmpty(tProInfo.getPicurl3())||
+                !StringUtils.isEmpty(tProInfo.getPicurl4())||
+                !StringUtils.isEmpty(tProInfo.getPicurl5())||
+                !StringUtils.isEmpty(tProInfo.getPicurl6())||
+                !StringUtils.isEmpty(tProInfo.getPicurl7())||
+                !StringUtils.isEmpty(tProInfo.getPicurl8())){
+            return false;
+        }
+        return true;
+    }
+
+
     /**
-     *
      * @param proId
      * @return
      */
@@ -262,8 +296,25 @@ public class WxBsmControllor {
                 tProInfo.getPicurl1(), tProInfo.getPicurl2(), tProInfo.getPicurl3(), tProInfo.getPicurl4(), tProInfo.getPicurl5(),
                 tProInfo.getPicurl6(), tProInfo.getPicurl7(), tProInfo.getPicurl8()
         );
-        List<String> res = prosUrl.stream().filter(item -> !StringUtils.isEmpty(item)).collect(Collectors.toList());
-        return ResultMessage.getDefaultResultMessage(200, "返回成功",res);
+
+        //去重
+//        List<String> res = prosUrl.stream().filter(item -> !StringUtils.isEmpty(item)).collect(Collectors.toList());
+
+        List<Map<String, Object>> resList = new ArrayList<>();
+        AtomicInteger atomicInteger = new AtomicInteger(1);
+        prosUrl.forEach(item -> {
+            if(StringUtils.isEmpty(item)){
+                atomicInteger.getAndIncrement();
+                return;
+            }
+            Map<String, Object> result = new HashMap<>();
+            result.put("bIndex",String.valueOf(atomicInteger.getAndIncrement()));
+            result.put("bUrl",item);
+            resList.add(result);
+        });
+        //List转map
+//        Map<String, Integer> collect = res.stream().collect(Collectors.toMap(Function.identity(), item -> atomicInteger.getAndIncrement()));
+        return ResultMessage.getDefaultResultMessage(200, "返回成功", resList);
     }
 
     /**
