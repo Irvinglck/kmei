@@ -257,8 +257,12 @@ public class WxBsmControllor {
         if (tProInfo == null) {
             return ResultMessage.getDefaultResultMessage(500, "反射赋值失败");
         }
-        if(!isLastOne(tProInfo))
+        if(!isLastOne(tProInfo)){
             tProInfo.setHaveimg("false");
+            tProInfo.setDownpdf("");
+            tProInfo.setHavepdf("false");
+        }
+
         boolean result = tProInfoService.update(tProInfo, new UpdateWrapper<TProInfo>().lambda().eq(TProInfo::getProid, proId));
         return result ? ResultMessage.getDefaultResultMessage(200, "删除成功") :
                 ResultMessage.getDefaultResultMessage(500, "删除失败");
@@ -277,8 +281,6 @@ public class WxBsmControllor {
         }
         return false;
     }
-
-
     /**
      * @param proId
      * @return

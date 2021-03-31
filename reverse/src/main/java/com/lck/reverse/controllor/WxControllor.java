@@ -157,10 +157,13 @@ public class WxControllor {
         for (String strs : prosUrl) {
             if (StringUtils.isEmpty(strs))
                 continue;
+            String extentName=splitStr(strs);
+            if(StringUtils.isEmpty(extentName))
+                continue;
             String productName = "product" + (++i);
             //下载文件写入本地
             downloadHttpResource(strs, productName, LOCAL_PRODUCT_DIR);
-            images.add(Image.getInstance(LOCAL_PRODUCT_DIR + "/" + productName + ".jpg"));
+            images.add(Image.getInstance(LOCAL_PRODUCT_DIR + "/" + productName + "."+extentName));
         }
         try {
             // 1.新建document对象
@@ -185,13 +188,36 @@ public class WxControllor {
             document.close();
             //上传pdf
             uploadLocalPdf(pdfPath, pdfName);
-            return aBoolean ? ResultMessage.getDefaultResultMessage(200).setMsg("pdf合成成功").setData("https://km-wx-1304476764.cos.ap-nanjing.myqcloud.com/PRODUCT/pdf/" + productId + ".pdf")
+            String remoteUrl = "https://km-wx-1304476764.cos.ap-nanjing.myqcloud.com/PRODUCT/pdf/" + productId + ".pdf";
+            //修改数据库记录
+            updateTproInfoBypProId(tProInfo);
+            return aBoolean ? ResultMessage.getDefaultResultMessage(200).setMsg("pdf合成成功").setData(remoteUrl)
                     : ResultMessage.getDefaultResultMessage(501).setMsg("pdf合成失败");
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return ResultMessage.getDefaultResultMessage(502).setMsg("pdf合成异常");
+    }
+
+    private String splitStr(String strs) {
+        try{
+            String[] split = strs.split("/");
+            String fName=split[split.length-1];
+            String[] split1 = fName.split("\\.");
+            return split1[split1.length-1];
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+
+    }
+
+
+    private void updateTproInfoBypProId(TProInfo tProInfo) {
+        tProInfo.setDownpdf(tProInfo.getProid()+".pdf");
+        tProInfo.setHavepdf("true");
+        tProInfoService.update(tProInfo,new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid,tProInfo.getProid()));
     }
 
     //上传本地文件
