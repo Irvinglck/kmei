@@ -153,7 +153,7 @@ public class WxBsmControllor {
             @RequestParam(name = "proId") String proId
     ) {
         log.info("接口[{}]开始执行,参数[{}]", "delPro", proId);
-        boolean remove = tProAttributeService.remove(new QueryWrapper<TProAttribute>().lambda().eq(TProAttribute::getId, proId));
+        boolean remove = tProAttributeService.remove(new QueryWrapper<TProAttribute>().lambda().eq(TProAttribute::getIdattr, Integer.valueOf(proId)));
         boolean remove1 = tProInfoService.remove(new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid, proId));
         if (remove && remove1)
             return ResultMessage.getDefaultResultMessage(200, "删除成功");
@@ -266,6 +266,22 @@ public class WxBsmControllor {
         boolean result = tProInfoService.update(tProInfo, new UpdateWrapper<TProInfo>().lambda().eq(TProInfo::getProid, proId));
         return result ? ResultMessage.getDefaultResultMessage(200, "删除成功") :
                 ResultMessage.getDefaultResultMessage(500, "删除失败");
+    }
+
+    /**
+     * 更新产品属性
+     * @param tProAttribute
+     * @return
+     */
+    @GetMapping("/updatePro")
+    public ResultMessage updatePro(
+            @RequestBody TProAttribute tProAttribute
+    ) {
+        if(tProAttribute==null||tProAttribute.getIdattr()==0)
+            return ResultMessage.getDefaultResultMessage(500, "对象为空");
+        boolean update = tProAttributeService.update(tProAttribute, new UpdateWrapper<TProAttribute>().lambda().eq(TProAttribute::getIdattr, tProAttribute.getIdattr()));
+        return update ? ResultMessage.getDefaultResultMessage(200, "修改成功") :
+                ResultMessage.getDefaultResultMessage(500, "修改失败");
     }
 
     private boolean isLastOne(TProInfo tProInfo) {

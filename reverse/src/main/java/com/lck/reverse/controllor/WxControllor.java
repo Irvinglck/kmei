@@ -146,7 +146,7 @@ public class WxControllor {
 
         TProInfo tProInfo = tProInfoService.getOne(new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid, productId));
         if (tProInfo == null) {
-            return ResultMessage.getDefaultResultMessage(200, "产品id [ " + productId + " ] 没有对应产品");
+            return ResultMessage.getDefaultResultMessage(500, "产品id [ " + productId + " ] 没有对应产品");
         }
         List<String> prosUrl = Arrays.asList(
                 tProInfo.getPicurl1(), tProInfo.getPicurl2(), tProInfo.getPicurl3(), tProInfo.getPicurl4(), tProInfo.getPicurl5(),
@@ -191,13 +191,13 @@ public class WxControllor {
             String remoteUrl = "https://km-wx-1304476764.cos.ap-nanjing.myqcloud.com/PRODUCT/pdf/" + productId + ".pdf";
             //修改数据库记录
             updateTproInfoBypProId(tProInfo);
-            return aBoolean ? ResultMessage.getDefaultResultMessage(200).setMsg("pdf合成成功").setData(remoteUrl)
-                    : ResultMessage.getDefaultResultMessage(501).setMsg("pdf合成失败");
+            return aBoolean ? ResultMessage.getDefaultResultMessage(200,"pdf合成成功",remoteUrl)
+                    : ResultMessage.getDefaultResultMessage(500).setMsg("pdf合成失败");
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return ResultMessage.getDefaultResultMessage(502).setMsg("pdf合成异常");
+        return ResultMessage.getDefaultResultMessage(500).setMsg("pdf合成异常");
     }
 
     private String splitStr(String strs) {
