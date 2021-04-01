@@ -130,6 +130,27 @@ public class WxBsmControllor {
         }
         return ResultMessage.getDefaultResultMessage(500, "查询异常");
     }
+    @GetMapping("getProInfos1")
+    public ResultMessage getProInfos1(
+            @RequestParam(name = "startIndex", required = false, defaultValue = "1") String startIndex,
+            @RequestParam(name = "pageSize", required = false, defaultValue = "10") String pageSize,
+            @RequestParam(name = "proName", required = false, defaultValue = "") String proName
+    ) {
+        log.info("接口[{}]开始执行,参数[{},{},{}]", "getProInfos", startIndex, pageSize, proName);
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("startIndex", startIndex);
+        params.put("pageSize", pageSize);
+        params.put("proName", proName);
+        try {
+            List<Map<String, Object>> proInfos = tProAttributeService.getProInfos(params);
+            Integer proInfosCount = tProAttributeService.getProInfosCount(params);
+            PageInfo<Map<String, Object>> result = new PageInfo<>(Integer.parseInt(startIndex), Integer.parseInt(pageSize), proInfosCount, proInfos);
+            return ResultMessage.getDefaultResultMessage(200, result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ResultMessage.getDefaultResultMessage(500, "查询异常");
+    }
 
     /**
      * 删除产品

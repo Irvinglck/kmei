@@ -94,7 +94,7 @@
         FROM `t_pro_attribute` att left join t_pro_info  pro on att.idAttr=pro.proId
         <where>
             <if test="proName != null and proName !=''">
-                ftitle like CONCAT('%',#{proName},'%')
+                title like CONCAT('%',#{proName},'%')
             </if>
         </where>
         order by att.idAttr desc
