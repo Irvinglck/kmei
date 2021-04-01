@@ -11,10 +11,7 @@ import com.lck.reverse.entity.*;
 import com.lck.reverse.entity.respon.PageInfo;
 import com.lck.reverse.entity.respon.ResultMessage;
 import com.lck.reverse.service.TProInfoService;
-import com.lck.reverse.service.impl.BannerImageServiceImpl;
-import com.lck.reverse.service.impl.TNewsServiceImpl;
-import com.lck.reverse.service.impl.TProAttributeServiceImpl;
-import com.lck.reverse.service.impl.TProInfoServiceImpl;
+import com.lck.reverse.service.impl.*;
 import com.lck.reverse.utils.map2bean.MapBeanConvert;
 import com.lck.reverse.utils.reflect.Reflect;
 import com.qcloud.cos.COSClient;
@@ -57,6 +54,8 @@ public class WxBsmControllor {
 
     @Autowired
     private TProAttributeServiceImpl tProAttributeService;
+    @Autowired
+    private TUserServiceImpl tUserService;
 
     @Autowired
     private TProInfoServiceImpl tProInfoService;
@@ -64,20 +63,7 @@ public class WxBsmControllor {
     @Autowired
     private COSClientConfig COSClientConfig;
 
-    /**
-     * 添加新闻
-     *
-     * @param tNews
-     * @return
-     */
-    @PostMapping("addNews")
-    public ResultMessage addNews(
-            @RequestBody TNews tNews
-    ) {
-        boolean result = tNewsService.save(tNews.setNewId(new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())));
-        return result ? ResultMessage.getDefaultResultMessage(200, "新闻信息添加成功") :
-                ResultMessage.getDefaultResultMessage(500, "新闻信息添加失败");
-    }
+
 
     /**
      * 添加banner
@@ -346,7 +332,21 @@ public class WxBsmControllor {
     public ResultMessage uploadFile(
             @RequestParam(name = "imgFile") MultipartFile imgFile,
             @RequestParam(name = "fileType") String fileType,
-            @RequestParam(name = "bannerName", required = false, defaultValue = "") String bannerName
+            //banner添加
+            @RequestParam(name = "bannerName", required = false, defaultValue = "") String bannerName,
+            //新闻添加
+            @RequestParam(name = "title", required = false, defaultValue = "") String title,
+            @RequestParam(name = "subtitle", required = false, defaultValue = "") String subtitle,
+            @RequestParam(name = "nurl", required = false, defaultValue = "") String nurl,
+            //人员添加
+            @RequestParam(name = "account", required = false, defaultValue = "") String account,
+            @RequestParam(name = "password", required = false, defaultValue = "") String password,
+            @RequestParam(name = "emailAddress", required = false, defaultValue = "") String emailAddress,
+            @RequestParam(name = "introduce", required = false, defaultValue = "") String introduce,
+            @RequestParam(name = "nickName", required = false, defaultValue = "") String nickName,
+            @RequestParam(name = "realName", required = false, defaultValue = "") String realName,
+            @RequestParam(name = "sex", required = false, defaultValue = "") String sex
+
     ) {
 
         String result = this.uploadFile(fileType, imgFile);
@@ -357,11 +357,11 @@ public class WxBsmControllor {
             case "banner":
                 saveBanner(result, bannerName);
                 break;
-            case "pro":
-                saveProduct();
+            case "user":
+                saveProduct(result,account,password,emailAddress,introduce,nickName,realName,sex);
                 break;
             case "news":
-                saveNews();
+                saveNews(result,title,subtitle,nurl);
                 break;
             default:
                 log.info("暂无上传文件");
@@ -370,12 +370,28 @@ public class WxBsmControllor {
         return ResultMessage.getDefaultResultMessage(200, "文件上传成功");
     }
 
-    private void saveNews() {
-
+    private void saveNews(String result,String title,String subtitle,String nurl) {
+        TNews tNews = new TNews()
+                .setNewId(getDateTimeStr())
+                .setNurl(nurl)
+                .setTitle(title)
+                .setSubtitle(subtitle)
+                .setTitleUrl(KM_DOMAIN_NAME+"/"+result);
+        tNewsService.save(tNews);
     }
 
-    private void saveProduct() {
-
+    private void saveProduct(String key,String account,String password,String emailAddress,String introduce,String nickName,String realName,String sex) {
+        TUser tUser = new TUser()
+                .setTitleUrl(KM_DOMAIN_NAME+"/"+key)
+                .setAccount(account)
+                .setPassword(password)
+                .setEmailAddress(emailAddress)
+                .setIntroduce(introduce)
+                .setNickName(nickName)
+                .setRealName(realName)
+                .setSex(sex)
+                ;
+        tUserService.save(tUser);
     }
 
 
@@ -400,7 +416,7 @@ public class WxBsmControllor {
                 EnumFilePath.NEWS.getValue() :
                 (EnumFilePath.BANNER.getMsg().equals(fileType)) ?
                         EnumFilePath.BANNER.getValue() :
-                        EnumFilePath.PRODUCT.getValue();
+                        EnumFilePath.AVATAR.getValue();
         COSClient cosClient = COSClientConfig.getCOSClient();
         String key = pathFile + imgFile.getOriginalFilename();
         ObjectMetadata objectMetadata = new ObjectMetadata();
@@ -415,4 +431,99 @@ public class WxBsmControllor {
         }
         return null;
     }
+    /**
+     * news列表
+     */
+    @GetMapping("/getNews")
+    public ResultMessage getNews(
+        @RequestParam(name="startIndex",required = false,defaultValue = "1") Integer startIndex,
+        @RequestParam(name="pageSize",required = false,defaultValue = "10") Integer pageSize,
+        @RequestParam(name="title",required = false,defaultValue = "") String title
+    ){
+        try {
+            List<TNews> list=!StringUtils.isEmpty(title)?
+            tNewsService.list(new QueryWrapper<TNews>().lambda()
+                    .like(TNews::getSubtitle, title)
+                    .or()
+                    .like(TNews::getTitle, title)
+            ):tNewsService.list();
+            List<TNews> result = list.stream()
+                    .sorted(((o1, o2) -> -o1.getCreateTime().compareTo(o2.getCreateTime())))
+                    .skip(startIndex).limit(pageSize).collect(Collectors.toList());
+            PageInfo<TNews> pageInfos=new PageInfo<>(startIndex,pageSize,list.size(),result);
+            return ResultMessage.getDefaultResultMessage(200,pageInfos);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return ResultMessage.getDefaultResultMessage(500,"获取列表失败");
+    }
+
+ /**
+     * add news
+     * @param tNews
+     * @return
+     */
+    @PostMapping("addNews")
+    public ResultMessage addNews(
+            @RequestBody TNews tNews
+    ) {
+        boolean result = tNewsService.save(tNews.setNewId(new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())));
+        return result ? ResultMessage.getDefaultResultMessage(200, "新闻信息添加成功") :
+                ResultMessage.getDefaultResultMessage(500, "新闻信息添加失败");
+    }
+
+    /**
+     * del news
+     * @param newId
+     * @return
+     */
+    @GetMapping("delNews")
+    public ResultMessage delNews(
+            @RequestParam(name="newId") Integer newId
+    ) {
+        boolean result = tNewsService.removeById(newId);
+        return result ? ResultMessage.getDefaultResultMessage(200, "新闻信息删除成功") :
+                ResultMessage.getDefaultResultMessage(500, "新闻信息删除失败");
+    }
+
+    /**
+     * users列表
+     */
+    @GetMapping("/getUsers")
+    public ResultMessage getUsers(
+            @RequestParam(name="startIndex",required = false,defaultValue = "1") Integer startIndex,
+            @RequestParam(name="pageSize",required = false,defaultValue = "10") Integer pageSize,
+            @RequestParam(name="userName",required = false,defaultValue = "") String userName
+    ){
+        try {
+            List<TUser> list=!StringUtils.isEmpty(userName)?
+                    tUserService.list(new QueryWrapper<TUser>().lambda()
+                            .like(TUser::getNickName, userName)
+                            .or()
+                            .like(TUser::getRealName, userName)
+                    ):tUserService.list();
+            List<TUser> result = list.stream()
+                    .sorted(((o1, o2) -> -o1.getCreateTime().compareTo(o2.getCreateTime())))
+                    .skip(startIndex).limit(pageSize).collect(Collectors.toList());
+            PageInfo<TUser> pageInfos=new PageInfo<>(startIndex,pageSize,list.size(),result);
+            return ResultMessage.getDefaultResultMessage(200,pageInfos);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return ResultMessage.getDefaultResultMessage(500,"获取列表失败");
+    }
+    /**
+     * del user
+     * @param userId
+     * @return
+     */
+    @GetMapping("delUser")
+    public ResultMessage delUser(
+            @RequestParam(name="userId") Integer userId
+    ) {
+        boolean result = tUserService.removeById(userId);
+        return result ? ResultMessage.getDefaultResultMessage(200, "删除用户成功") :
+                ResultMessage.getDefaultResultMessage(500, "用户删除失败");
+    }
+
 }

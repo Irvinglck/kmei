@@ -3,7 +3,8 @@ package com.lck.reverse.entity;
 public enum EnumFilePath {
     PRODUCT("pro","PRODUCT/print/"),
     BANNER("banner","banner/"),
-    NEWS("news","news/title/");
+    NEWS("news","news/title/"),
+    AVATAR("avatar","avatar/");
     private String msg;
     private String value;
     private EnumFilePath(String msg,String value){
