@@ -64,7 +64,6 @@ public class WxBsmControllor {
     private COSClientConfig COSClientConfig;
 
 
-
     /**
      * 添加banner
      *
@@ -130,6 +129,7 @@ public class WxBsmControllor {
         }
         return ResultMessage.getDefaultResultMessage(500, "查询异常");
     }
+
     @GetMapping("getProInfos1")
     public ResultMessage getProInfos1(
             @RequestParam(name = "startIndex", required = false, defaultValue = "1") String startIndex,
@@ -237,7 +237,7 @@ public class WxBsmControllor {
             tProInfo.setProname(proName);
             tProInfo.setHaveimg("true");
             log.info("TProInfo映射之后的值为[{}]", tProInfo.toString());
-            tProInfoService.saveOrUpdate(tProInfo,new UpdateWrapper<TProInfo>().lambda().eq(TProInfo::getProid,idAttr));
+            tProInfoService.saveOrUpdate(tProInfo, new UpdateWrapper<TProInfo>().lambda().eq(TProInfo::getProid, idAttr));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -264,7 +264,7 @@ public class WxBsmControllor {
         if (tProInfo == null) {
             return ResultMessage.getDefaultResultMessage(500, "反射赋值失败");
         }
-        if(!isLastOne(tProInfo)){
+        if (!isLastOne(tProInfo)) {
             tProInfo.setHaveimg("false");
             tProInfo.setDownpdf("");
             tProInfo.setHavepdf("false");
@@ -277,6 +277,7 @@ public class WxBsmControllor {
 
     /**
      * 更新产品属性
+     *
      * @param tProAttribute
      * @return
      */
@@ -284,7 +285,7 @@ public class WxBsmControllor {
     public ResultMessage updatePro(
             @RequestBody TProAttribute tProAttribute
     ) {
-        if(tProAttribute==null||tProAttribute.getIdattr()==0)
+        if (tProAttribute == null || tProAttribute.getIdattr() == 0)
             return ResultMessage.getDefaultResultMessage(500, "对象为空");
         boolean update = tProAttributeService.update(tProAttribute, new UpdateWrapper<TProAttribute>().lambda().eq(TProAttribute::getIdattr, tProAttribute.getIdattr()));
         return update ? ResultMessage.getDefaultResultMessage(200, "修改成功") :
@@ -292,18 +293,19 @@ public class WxBsmControllor {
     }
 
     private boolean isLastOne(TProInfo tProInfo) {
-        if(!StringUtils.isEmpty(tProInfo.getPicurl1())||
-                !StringUtils.isEmpty(tProInfo.getPicurl2())||
-                !StringUtils.isEmpty(tProInfo.getPicurl3())||
-                !StringUtils.isEmpty(tProInfo.getPicurl4())||
-                !StringUtils.isEmpty(tProInfo.getPicurl5())||
-                !StringUtils.isEmpty(tProInfo.getPicurl6())||
-                !StringUtils.isEmpty(tProInfo.getPicurl7())||
-                !StringUtils.isEmpty(tProInfo.getPicurl8())){
+        if (!StringUtils.isEmpty(tProInfo.getPicurl1()) ||
+                !StringUtils.isEmpty(tProInfo.getPicurl2()) ||
+                !StringUtils.isEmpty(tProInfo.getPicurl3()) ||
+                !StringUtils.isEmpty(tProInfo.getPicurl4()) ||
+                !StringUtils.isEmpty(tProInfo.getPicurl5()) ||
+                !StringUtils.isEmpty(tProInfo.getPicurl6()) ||
+                !StringUtils.isEmpty(tProInfo.getPicurl7()) ||
+                !StringUtils.isEmpty(tProInfo.getPicurl8())) {
             return true;
         }
         return false;
     }
+
     /**
      * @param proId
      * @return
@@ -328,13 +330,13 @@ public class WxBsmControllor {
         List<Map<String, Object>> resList = new ArrayList<>();
         AtomicInteger atomicInteger = new AtomicInteger(1);
         prosUrl.forEach(item -> {
-            if(StringUtils.isEmpty(item)){
+            if (StringUtils.isEmpty(item)) {
                 atomicInteger.getAndIncrement();
                 return;
             }
             Map<String, Object> result = new HashMap<>();
-            result.put("bIndex",String.valueOf(atomicInteger.getAndIncrement()));
-            result.put("bUrl",item);
+            result.put("bIndex", String.valueOf(atomicInteger.getAndIncrement()));
+            result.put("bUrl", item);
             resList.add(result);
         });
         //List转map
@@ -379,10 +381,10 @@ public class WxBsmControllor {
                 saveBanner(result, bannerName);
                 break;
             case "user":
-                saveProduct(result,account,password,emailAddress,introduce,nickName,realName,sex);
+                saveProduct(result, account, password, emailAddress, introduce, nickName, realName, sex);
                 break;
             case "news":
-                saveNews(result,title,subtitle,nurl);
+                saveNews(result, title, subtitle, nurl);
                 break;
             default:
                 log.info("暂无上传文件");
@@ -391,27 +393,26 @@ public class WxBsmControllor {
         return ResultMessage.getDefaultResultMessage(200, "文件上传成功");
     }
 
-    private void saveNews(String result,String title,String subtitle,String nurl) {
+    private void saveNews(String result, String title, String subtitle, String nurl) {
         TNews tNews = new TNews()
                 .setNewId(getDateTimeStr())
                 .setNurl(nurl)
                 .setTitle(title)
                 .setSubtitle(subtitle)
-                .setTitleUrl(KM_DOMAIN_NAME+"/"+result);
+                .setTitleUrl(KM_DOMAIN_NAME + "/" + result);
         tNewsService.save(tNews);
     }
 
-    private void saveProduct(String key,String account,String password,String emailAddress,String introduce,String nickName,String realName,String sex) {
+    private void saveProduct(String key, String account, String password, String emailAddress, String introduce, String nickName, String realName, String sex) {
         TUser tUser = new TUser()
-                .setTitleUrl(KM_DOMAIN_NAME+"/"+key)
+                .setTitleUrl(KM_DOMAIN_NAME + "/" + key)
                 .setAccount(account)
                 .setPassword(password)
                 .setEmailAddress(emailAddress)
                 .setIntroduce(introduce)
                 .setNickName(nickName)
                 .setRealName(realName)
-                .setSex(sex)
-                ;
+                .setSex(sex);
         tUserService.save(tUser);
     }
 
@@ -452,35 +453,37 @@ public class WxBsmControllor {
         }
         return null;
     }
+
     /**
      * news列表
      */
     @GetMapping("/getNews")
     public ResultMessage getNews(
-        @RequestParam(name="startIndex",required = false,defaultValue = "1") Integer startIndex,
-        @RequestParam(name="pageSize",required = false,defaultValue = "10") Integer pageSize,
-        @RequestParam(name="title",required = false,defaultValue = "") String title
-    ){
+            @RequestParam(name = "startIndex", required = false, defaultValue = "1") Integer startIndex,
+            @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize,
+            @RequestParam(name = "title", required = false, defaultValue = "") String title
+    ) {
         try {
-            List<TNews> list=!StringUtils.isEmpty(title)?
-            tNewsService.list(new QueryWrapper<TNews>().lambda()
-                    .like(TNews::getSubtitle, title)
-                    .or()
-                    .like(TNews::getTitle, title)
-            ):tNewsService.list();
+            List<TNews> list = !StringUtils.isEmpty(title) ?
+                    tNewsService.list(new QueryWrapper<TNews>().lambda()
+                            .like(TNews::getSubtitle, title)
+                            .or()
+                            .like(TNews::getTitle, title)
+                    ) : tNewsService.list();
             List<TNews> result = list.stream()
                     .sorted(((o1, o2) -> -o1.getCreateTime().compareTo(o2.getCreateTime())))
                     .skip(startIndex).limit(pageSize).collect(Collectors.toList());
-            PageInfo<TNews> pageInfos=new PageInfo<>(startIndex,pageSize,list.size(),result);
-            return ResultMessage.getDefaultResultMessage(200,pageInfos);
-        }catch (Exception e){
+            PageInfo<TNews> pageInfos = new PageInfo<>(startIndex, pageSize, list.size(), result);
+            return ResultMessage.getDefaultResultMessage(200, pageInfos);
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return ResultMessage.getDefaultResultMessage(500,"获取列表失败");
+        return ResultMessage.getDefaultResultMessage(500, "获取列表失败");
     }
 
- /**
+    /**
      * add news
+     *
      * @param tNews
      * @return
      */
@@ -495,12 +498,13 @@ public class WxBsmControllor {
 
     /**
      * del news
+     *
      * @param newId
      * @return
      */
     @GetMapping("delNews")
     public ResultMessage delNews(
-            @RequestParam(name="newId") Integer newId
+            @RequestParam(name = "newId") Integer newId
     ) {
         boolean result = tNewsService.removeById(newId);
         return result ? ResultMessage.getDefaultResultMessage(200, "新闻信息删除成功") :
@@ -512,39 +516,62 @@ public class WxBsmControllor {
      */
     @GetMapping("/getUsers")
     public ResultMessage getUsers(
-            @RequestParam(name="startIndex",required = false,defaultValue = "1") Integer startIndex,
-            @RequestParam(name="pageSize",required = false,defaultValue = "10") Integer pageSize,
-            @RequestParam(name="userName",required = false,defaultValue = "") String userName
-    ){
+            @RequestParam(name = "startIndex", required = false, defaultValue = "1") Integer startIndex,
+            @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize,
+            @RequestParam(name = "userName", required = false, defaultValue = "") String userName
+    ) {
         try {
-            List<TUser> list=!StringUtils.isEmpty(userName)?
+            List<TUser> list = !StringUtils.isEmpty(userName) ?
                     tUserService.list(new QueryWrapper<TUser>().lambda()
                             .like(TUser::getNickName, userName)
                             .or()
                             .like(TUser::getRealName, userName)
-                    ):tUserService.list();
+                    ) : tUserService.list();
             List<TUser> result = list.stream()
                     .sorted(((o1, o2) -> -o1.getCreateTime().compareTo(o2.getCreateTime())))
                     .skip(startIndex).limit(pageSize).collect(Collectors.toList());
-            PageInfo<TUser> pageInfos=new PageInfo<>(startIndex,pageSize,list.size(),result);
-            return ResultMessage.getDefaultResultMessage(200,pageInfos);
-        }catch (Exception e){
+            PageInfo<TUser> pageInfos = new PageInfo<>(startIndex, pageSize, list.size(), result);
+            return ResultMessage.getDefaultResultMessage(200, pageInfos);
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return ResultMessage.getDefaultResultMessage(500,"获取列表失败");
+        return ResultMessage.getDefaultResultMessage(500, "获取列表失败");
     }
+
     /**
      * del user
+     *
      * @param userId
      * @return
      */
     @GetMapping("delUser")
     public ResultMessage delUser(
-            @RequestParam(name="userId") Integer userId
+            @RequestParam(name = "userId") Integer userId
     ) {
         boolean result = tUserService.removeById(userId);
         return result ? ResultMessage.getDefaultResultMessage(200, "删除用户成功") :
                 ResultMessage.getDefaultResultMessage(500, "用户删除失败");
+    }
+
+    /**
+     * login user
+     *
+     * @param
+     * @return
+     */
+    @GetMapping("userLogin")
+    public ResultMessage userLogin(
+            @RequestParam(name = "account") String account,
+            @RequestParam(name = "password") String password
+    ) {
+        if (StringUtils.isEmpty(account) || StringUtils.isEmpty(password))
+            return ResultMessage.getDefaultResultMessage(500, "账号或者密码不能为空");
+        TUser one = tUserService.getOne(new QueryWrapper<TUser>().lambda().eq(TUser::getAccount, account));
+        if(one==null)
+            return ResultMessage.getDefaultResultMessage(500, "该用户不存在");
+        if(!password.equals(one.getPassword()))
+            return ResultMessage.getDefaultResultMessage(500, "密码错误");
+        return ResultMessage.getDefaultResultMessage(200, "登录成功",one);
     }
 
 }
