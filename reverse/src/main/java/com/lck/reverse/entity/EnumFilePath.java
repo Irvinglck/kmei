@@ -2,6 +2,7 @@ package com.lck.reverse.entity;
 
 public enum EnumFilePath {
     PRODUCT("pro","PRODUCT/print/"),
+    PRODUCT_PDF("proPdf","PRODUCT/pdf/"),//产品pdf文件
     BANNER("banner","banner/"),
     NEWS("news","news/title/"),
     AVATAR("avatar","avatar/");

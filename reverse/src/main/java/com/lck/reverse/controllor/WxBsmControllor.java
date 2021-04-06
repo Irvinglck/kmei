@@ -388,7 +388,7 @@ public class WxBsmControllor {
             case "news":
                 saveNews(result, title, subtitle, nurl);
                 break;
-            case "pro":
+            case "proPdf":
                 saveProPdf(result,proInfoId);
                 break;
             default:
@@ -450,7 +450,7 @@ public class WxBsmControllor {
                         EnumFilePath.BANNER.getValue() :
                         (EnumFilePath.AVATAR.getMsg().equals(fileType))?
                         EnumFilePath.AVATAR.getValue():
-                        EnumFilePath.PRODUCT.getValue();
+                        EnumFilePath.PRODUCT_PDF.getValue();
         COSClient cosClient = COSClientConfig.getCOSClient();
         String key = pathFile + imgFile.getOriginalFilename();
         ObjectMetadata objectMetadata = new ObjectMetadata();
@@ -458,7 +458,7 @@ public class WxBsmControllor {
         try {
             putObjectRequest = new PutObjectRequest(BUCKET_NAME, key, imgFile.getInputStream(), objectMetadata);
             cosClient.putObject(putObjectRequest);
-            if(fileType.equals(EnumFilePath.PRODUCT.getMsg()))
+            if(fileType.equals(EnumFilePath.PRODUCT_PDF.getMsg()))
                 return imgFile.getOriginalFilename();
             return key;
         } catch (IOException e) {

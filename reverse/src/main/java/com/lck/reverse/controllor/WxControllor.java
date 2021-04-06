@@ -157,13 +157,13 @@ public class WxControllor {
         for (String strs : prosUrl) {
             if (StringUtils.isEmpty(strs))
                 continue;
-            String extentName=splitStr(strs);
-            if(StringUtils.isEmpty(extentName))
+            String extentName = splitStr(strs);
+            if (StringUtils.isEmpty(extentName))
                 continue;
             String productName = "product" + (++i);
             //下载文件写入本地
             downloadHttpResource(strs, productName, LOCAL_PRODUCT_DIR);
-            images.add(Image.getInstance(LOCAL_PRODUCT_DIR + "/" + productName + "."+extentName));
+            images.add(Image.getInstance(LOCAL_PRODUCT_DIR + "/" + productName + "." + extentName));
         }
         try {
             // 1.新建document对象
@@ -191,7 +191,7 @@ public class WxControllor {
             String remoteUrl = "https://km-wx-1304476764.cos.ap-nanjing.myqcloud.com/PRODUCT/pdf/" + productId + ".pdf";
             //修改数据库记录
             updateTproInfoBypProId(tProInfo);
-            return aBoolean ? ResultMessage.getDefaultResultMessage(200,"pdf合成成功",remoteUrl)
+            return aBoolean ? ResultMessage.getDefaultResultMessage(200, "pdf合成成功", remoteUrl)
                     : ResultMessage.getDefaultResultMessage(500).setMsg("pdf合成失败");
         } catch (Exception e) {
             e.printStackTrace();
@@ -201,12 +201,12 @@ public class WxControllor {
     }
 
     private String splitStr(String strs) {
-        try{
+        try {
             String[] split = strs.split("/");
-            String fName=split[split.length-1];
+            String fName = split[split.length - 1];
             String[] split1 = fName.split("\\.");
-            return split1[split1.length-1];
-        }catch (Exception e){
+            return split1[split1.length - 1];
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
@@ -215,9 +215,9 @@ public class WxControllor {
 
 
     private void updateTproInfoBypProId(TProInfo tProInfo) {
-        tProInfo.setDownpdf(tProInfo.getProid()+".pdf");
+        tProInfo.setDownpdf(tProInfo.getProid() + ".pdf");
         tProInfo.setHavepdf("true");
-        tProInfoService.update(tProInfo,new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid,tProInfo.getProid()));
+        tProInfoService.update(tProInfo, new QueryWrapper<TProInfo>().lambda().eq(TProInfo::getProid, tProInfo.getProid()));
     }
 
     //上传本地文件
@@ -358,27 +358,24 @@ public class WxControllor {
 
         List<TProAttribute> list = tProAttributeService.list();
         List<TProAttribute> results = new ArrayList<>();
-        AtomicInteger num = new AtomicInteger(0);
-        for (int i = 0; i < strs.length(); i++) {
+//        String s = String.valueOf(strs.charAt(andIncrement));
+        List<TProAttribute> pro1 = list.stream().filter(item -> {
+            return
+//                        item.getClassid().contains(s) ||
+//                        item.getCert().contains(s) ||
+                    item.getColour().contains(strs) ||
+                            item.getFtitle().contains(strs) ||
+                            item.getTitle().contains(strs);
+//                        item.getOutputsizemax().contains(s) ||
+//                        item.getOutputSpeedColor().contains(s) ||
+//                        item.getOutputSpeedMono().contains(s) ||
+//                        item.getPrice().contains(s) ||
+//                        item.getSmalltext().contains(s) ||
+//                        item.getTitlepic().contains(s);
 
-            int andIncrement = num.getAndIncrement();
-            String s = String.valueOf(strs.charAt(andIncrement));
-            List<TProAttribute> pro1 = list.stream().filter(item -> {
-                return item.getClassid().contains(s) ||
-                        item.getCert().contains(s) ||
-                        item.getColour().contains(s) ||
-                        item.getFtitle().contains(s) ||
-                        item.getOutputsizemax().contains(s) ||
-                        item.getOutputSpeedColor().contains(s) ||
-                        item.getOutputSpeedMono().contains(s) ||
-                        item.getPrice().contains(s) ||
-                        item.getSmalltext().contains(s) ||
-                        item.getTitlepic().contains(s);
+        }).collect(Collectors.toList());
 
-            }).collect(Collectors.toList());
-
-            results.addAll(pro1);
-        }
+        results.addAll(pro1);
         List<TProAttribute> collect = results.stream().distinct().collect(Collectors.toList());
         System.out.println(results.size());
         System.out.println(collect.size());
