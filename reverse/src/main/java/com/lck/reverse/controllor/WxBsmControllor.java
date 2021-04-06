@@ -210,7 +210,7 @@ public class WxBsmControllor {
         Map<String, Object> maps = new HashMap<>(8);
         int i = 1;
         for (MultipartFile file : files) {
-            String pathFile = EnumFilePath.PRODUCT.getValue();
+            String pathFile = EnumFilePath.PRODUCT.getValue()+proName+"/";
             COSClient cosClient = COSClientConfig.getCOSClient();
             //文件名称
             String fileName = file.getOriginalFilename();
@@ -368,7 +368,9 @@ public class WxBsmControllor {
             @RequestParam(name = "introduce", required = false, defaultValue = "") String introduce,
             @RequestParam(name = "nickName", required = false, defaultValue = "") String nickName,
             @RequestParam(name = "realName", required = false, defaultValue = "") String realName,
-            @RequestParam(name = "sex", required = false, defaultValue = "") String sex
+            @RequestParam(name = "sex", required = false, defaultValue = "") String sex,
+            //产品pdf上传
+            @RequestParam(name = "proInfoId", required = false, defaultValue = "") String proInfoId
 
     ) {
 
@@ -381,16 +383,24 @@ public class WxBsmControllor {
                 saveBanner(result, bannerName);
                 break;
             case "user":
-                saveProduct(result, account, password, emailAddress, introduce, nickName, realName, sex);
+                saveUser(result, account, password, emailAddress, introduce, nickName, realName, sex);
                 break;
             case "news":
                 saveNews(result, title, subtitle, nurl);
+                break;
+            case "pro":
+                saveProPdf(result,proInfoId);
                 break;
             default:
                 log.info("暂无上传文件");
         }
 
         return ResultMessage.getDefaultResultMessage(200, "文件上传成功");
+    }
+
+    private void saveProPdf(String result, String proInfoId) {
+        TProInfo tProInfo = new TProInfo().setProid(proInfoId).setDownpdf(result).setHavepdf("true");
+        tProInfoService.saveOrUpdate(tProInfo,new UpdateWrapper<TProInfo>().lambda().eq(TProInfo::getProid,proInfoId));
     }
 
     private void saveNews(String result, String title, String subtitle, String nurl) {
@@ -403,7 +413,7 @@ public class WxBsmControllor {
         tNewsService.save(tNews);
     }
 
-    private void saveProduct(String key, String account, String password, String emailAddress, String introduce, String nickName, String realName, String sex) {
+    private void saveUser(String key, String account, String password, String emailAddress, String introduce, String nickName, String realName, String sex) {
         TUser tUser = new TUser()
                 .setTitleUrl(KM_DOMAIN_NAME + "/" + key)
                 .setAccount(account)
@@ -438,7 +448,9 @@ public class WxBsmControllor {
                 EnumFilePath.NEWS.getValue() :
                 (EnumFilePath.BANNER.getMsg().equals(fileType)) ?
                         EnumFilePath.BANNER.getValue() :
-                        EnumFilePath.AVATAR.getValue();
+                        (EnumFilePath.AVATAR.getMsg().equals(fileType))?
+                        EnumFilePath.AVATAR.getValue():
+                        EnumFilePath.PRODUCT.getValue();
         COSClient cosClient = COSClientConfig.getCOSClient();
         String key = pathFile + imgFile.getOriginalFilename();
         ObjectMetadata objectMetadata = new ObjectMetadata();
@@ -446,6 +458,8 @@ public class WxBsmControllor {
         try {
             putObjectRequest = new PutObjectRequest(BUCKET_NAME, key, imgFile.getInputStream(), objectMetadata);
             cosClient.putObject(putObjectRequest);
+            if(fileType.equals(EnumFilePath.PRODUCT.getMsg()))
+                return imgFile.getOriginalFilename();
             return key;
         } catch (IOException e) {
             log.error("类型[ {} ]文件上传失败", fileType);

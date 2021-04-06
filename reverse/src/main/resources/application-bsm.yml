@@ -1,5 +1,7 @@
 server:
   port: 9999
+  servlet:
+    context-path: /kmbsm
 spring:
   #数据库连接
   datasource:
