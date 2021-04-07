@@ -1,15 +1,15 @@
 package com.lck.reverse.stu.rabbitmq.config;
 
-import org.springframework.amqp.core.AmqpAdmin;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
-import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitAdmin;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
+//import org.springframework.amqp.core.AmqpAdmin;
+//import org.springframework.amqp.core.Queue;
+//import org.springframework.amqp.core.TopicExchange;
+//import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+//import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+//import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+//import org.springframework.amqp.rabbit.core.RabbitAdmin;
+//import org.springframework.amqp.rabbit.core.RabbitTemplate;
+//import org.springframework.beans.factory.annotation.Value;
+//import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 //配置多mq源
 @Configuration

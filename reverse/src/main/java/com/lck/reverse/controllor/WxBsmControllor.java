@@ -1,6 +1,9 @@
 package com.lck.reverse.controllor;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
@@ -25,6 +28,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -46,6 +51,14 @@ public class WxBsmControllor {
     //文件存储域名
     @Value("${km.tencent.filePath}")
     private String KM_DOMAIN_NAME;
+    @Value("${km.mutil.func.machine}")
+    private String MUTIL_FUNC_URL;
+    //打印机 / 一体机
+    @Value("${km.print.Integrated.machine}")
+    private String PRINT_INTEGRATED_URL;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Autowired
     private TNewsServiceImpl tNewsService;
@@ -210,7 +223,7 @@ public class WxBsmControllor {
         Map<String, Object> maps = new HashMap<>(8);
         int i = 1;
         for (MultipartFile file : files) {
-            String pathFile = EnumFilePath.PRODUCT.getValue()+proName+"/";
+            String pathFile = EnumFilePath.PRODUCT.getValue() + proName + "/";
             COSClient cosClient = COSClientConfig.getCOSClient();
             //文件名称
             String fileName = file.getOriginalFilename();
@@ -389,7 +402,7 @@ public class WxBsmControllor {
                 saveNews(result, title, subtitle, nurl);
                 break;
             case "proPdf":
-                saveProPdf(result,proInfoId);
+                saveProPdf(result, proInfoId);
                 break;
             default:
                 log.info("暂无上传文件");
@@ -400,7 +413,7 @@ public class WxBsmControllor {
 
     private void saveProPdf(String result, String proInfoId) {
         TProInfo tProInfo = new TProInfo().setProid(proInfoId).setDownpdf(result).setHavepdf("true");
-        tProInfoService.saveOrUpdate(tProInfo,new UpdateWrapper<TProInfo>().lambda().eq(TProInfo::getProid,proInfoId));
+        tProInfoService.saveOrUpdate(tProInfo, new UpdateWrapper<TProInfo>().lambda().eq(TProInfo::getProid, proInfoId));
     }
 
     private void saveNews(String result, String title, String subtitle, String nurl) {
@@ -448,9 +461,9 @@ public class WxBsmControllor {
                 EnumFilePath.NEWS.getValue() :
                 (EnumFilePath.BANNER.getMsg().equals(fileType)) ?
                         EnumFilePath.BANNER.getValue() :
-                        (EnumFilePath.AVATAR.getMsg().equals(fileType))?
-                        EnumFilePath.AVATAR.getValue():
-                        EnumFilePath.PRODUCT_PDF.getValue();
+                        (EnumFilePath.AVATAR.getMsg().equals(fileType)) ?
+                                EnumFilePath.AVATAR.getValue() :
+                                EnumFilePath.PRODUCT_PDF.getValue();
         COSClient cosClient = COSClientConfig.getCOSClient();
         String key = pathFile + imgFile.getOriginalFilename();
         ObjectMetadata objectMetadata = new ObjectMetadata();
@@ -458,7 +471,7 @@ public class WxBsmControllor {
         try {
             putObjectRequest = new PutObjectRequest(BUCKET_NAME, key, imgFile.getInputStream(), objectMetadata);
             cosClient.putObject(putObjectRequest);
-            if(fileType.equals(EnumFilePath.PRODUCT_PDF.getMsg()))
+            if (fileType.equals(EnumFilePath.PRODUCT_PDF.getMsg()))
                 return imgFile.getOriginalFilename();
             return key;
         } catch (IOException e) {
@@ -581,11 +594,41 @@ public class WxBsmControllor {
         if (StringUtils.isEmpty(account) || StringUtils.isEmpty(password))
             return ResultMessage.getDefaultResultMessage(500, "账号或者密码不能为空");
         TUser one = tUserService.getOne(new QueryWrapper<TUser>().lambda().eq(TUser::getAccount, account));
-        if(one==null)
+        if (one == null)
             return ResultMessage.getDefaultResultMessage(500, "该用户不存在");
-        if(!password.equals(one.getPassword()))
+        if (!password.equals(one.getPassword()))
             return ResultMessage.getDefaultResultMessage(500, "密码错误");
-        return ResultMessage.getDefaultResultMessage(200, "登录成功",one);
+        return ResultMessage.getDefaultResultMessage(200, "登录成功", one);
+    }
+
+    @GetMapping("/synData")
+    public ResultMessage synData() {
+        ResultMessage resultMessage=new ResultMessage().setCode(200).setMsg("同步成功");
+        List<String> strings = Arrays.asList(MUTIL_FUNC_URL, PRINT_INTEGRATED_URL);
+        for (String typeMachine : strings) {
+            //打印类型
+            String machineData = null;
+            try {
+                machineData = restTemplate.getForObject(typeMachine, String.class);
+                if (org.springframework.util.StringUtils.isEmpty(machineData))
+                    return new ResultMessage().setMsg("调用柯美接口异常****" + typeMachine).setCode(500);
+                JSONObject jsonObject = JSON.parseObject(machineData);
+                Object message = jsonObject.get("message");
+                if (ConstEnum.SUCCESS.getMsg().equals(message)) {
+                    JSONArray arr = (JSONArray) jsonObject.get("data");
+                    List<TProAttribute> pros = JSON.parseObject(arr.toJSONString(), new TypeReference<List<TProAttribute>>() {
+                    });
+                    for (TProAttribute pro : pros) {
+                        tProAttributeService.saveOrUpdate(pro, new UpdateWrapper<TProAttribute>().lambda().eq(TProAttribute::getId, pro.getId()));
+                    }
+                }
+            } catch (RestClientException e) {
+                resultMessage=ResultMessage.getDefaultResultMessage(500,"同步异常");
+                e.printStackTrace();
+            }
+        }
+        return resultMessage;
+
     }
 
 }
