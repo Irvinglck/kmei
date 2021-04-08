@@ -1,7 +1,7 @@
 server:
   port: 8888
   servlet:
-    context-path: /mq
+    context-path: /intel
 spring:
   #数据库连接
   datasource:
@@ -18,11 +18,18 @@ spring:
       write-dates-as-timestamps: false
   #rabbitmq
   rabbitmq:
-    addresses: 175.24.234.155
-    port: 5672
-    username: admin
-    password: admin
-    virtual-host: /
+    addresses: 192.168.1.195:5672,192.168.1.196:5672
+    username: jueying
+    password: 123456
+    virtual-host: /JueYing
+    connection-timeout: 5000
+    requested-heartbeat: 0
+    #RabbitMQ并发配置
+    listener:
+      simple:
+        concurrency: 2
+        max-concurrency: 2
+        prefetch: 2
 #产品文件临时写到本地目录
 local:
   product:
