@@ -65,6 +65,8 @@ public class TProAttribute implements Serializable {
 
     private String colour;
 
+    private String sortTitleByI;
+
 
     private static final long serialVersionUID = 1L;
 

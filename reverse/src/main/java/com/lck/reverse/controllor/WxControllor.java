@@ -262,11 +262,13 @@ public class WxControllor {
 
         params.put("lower", StringUtils.isEmpty(speed) || "undefined".equals(speed) ? "" : getRate(speed)[0]);
         params.put("high", StringUtils.isEmpty(speed) || "undefined".equals(speed) ? "" : getRate(speed)[1]);
-        params.put("startIndex", 1);
-        params.put("pageSize", 4);
+//        params.put("startIndex", 1);
+//        params.put("pageSize", 6);
 
+        List<TProAttribute> tProAttrs = tProAttributeService.getTProAttrs(params);
+        List<TProAttribute> tProAttributes = sortPros(tProAttrs).stream().skip(0).limit(6).collect(Collectors.toList());
 
-        return ResultMessage.getDefaultResultMessage(200, tProAttributeService.getTProAttrs(params));
+        return ResultMessage.getDefaultResultMessage(200, tProAttributes);
     }
 
     /**
@@ -306,10 +308,29 @@ public class WxControllor {
             @RequestParam(name = "type") String type
     ) {
         List<TProAttribute> list = tProAttributeService.list(new QueryWrapper<TProAttribute>().lambda().eq(TProAttribute::getClassid, type));
+
         if (list.size() == 0) {
             return ResultMessage.getDefaultResultMessage(200, "无此类型对应产品信息");
         }
-        return ResultMessage.getDefaultResultMessage(200, "查询成功", list);
+        List<TProAttribute> tProAttributes = sortPros(list);
+        return ResultMessage.getDefaultResultMessage(200, "查询成功", tProAttributes);
+    }
+
+    //颜色，i在前，数字，速度
+    private List<TProAttribute> sortPros(List<TProAttribute> list) {
+        return list.stream()
+                //颜色
+                .sorted(Comparator.comparing(TProAttribute::getColour)
+                        //有i的在前面
+                        .thenComparing(TProAttribute::getSortTitleByI, Comparator.reverseOrder())
+                        //数字从小到大
+                        .thenComparing(TProAttribute::getTitle)
+                        //彩印打印速度
+                        .thenComparing(TProAttribute::getOutputSpeedColor, Comparator.reverseOrder())
+                        //黑白打印速度
+                        .thenComparing(TProAttribute::getOutputSpeedMono, Comparator.reverseOrder()))
+
+                .collect(Collectors.toList());
     }
 
     @GetMapping("getNews")
@@ -377,7 +398,7 @@ public class WxControllor {
         List<TProAttribute> collect = results.stream().distinct().collect(Collectors.toList());
         System.out.println(results.size());
         System.out.println(collect.size());
-        return ResultMessage.getDefaultResultMessage(200, "收索成功", collect);
+        return ResultMessage.getDefaultResultMessage(200, "收索成功",  sortPros(collect));
 
     }
 

@@ -21,11 +21,12 @@
         <result column="output_speed_mono" property="outputSpeedMono" jdbcType="VARCHAR"/>
         <result column="outputsizemax" property="outputsizemax" jdbcType="VARCHAR"/>
         <result column="colour" property="colour" jdbcType="VARCHAR"/>
+        <result column="sort_title_by_i" property="sortTitleByI" jdbcType="VARCHAR"/>
     </resultMap>
     <sql id="Base_Column_List">
 
     idAttr, id, classid, title, ftitle, titlepic, smalltext, pimg1, pimg2, pimg3, pimg4, 
-    price, cert, pdfdownload, output_speed_color, output_speed_mono, outputsizemax, colour
+    price, cert, pdfdownload, output_speed_color, output_speed_mono, outputsizemax, colour,sort_title_by_i
   </sql>
 
     <insert id="insertBatch" parameterType="java.util.List">
@@ -74,8 +75,9 @@
         from t_pro_attribute
         where 1=1
         <if test="lower != null and lower !=''">
-            and output_speed_mono &gt;=  #{lower}
-        </if><if test="high != null and high !=''">
+            and output_speed_mono &gt;= #{lower}
+        </if>
+        <if test="high != null and high !=''">
             and output_speed_mono &lt;= #{high}
         </if>
         <if test="outputsizemax != null and outputsizemax !=''">
@@ -84,14 +86,14 @@
         <if test="colour != null and colour !=''">
             and colour = #{colour}
         </if>
-        limit ${startIndex} , ${pageSize}
+--         limit ${startIndex} , ${pageSize}
     </select>
-<!-- att.pimg1, pimg2, pimg3, pimg4,-->
-<!-- limit ${startIndex},${pageSize}-->
+    <!-- att.pimg1, pimg2, pimg3, pimg4,-->
+    <!-- limit ${startIndex},${pageSize}-->
     <select id="getProInfos" parameterType="java.util.HashMap" resultType="java.util.HashMap">
         SELECT att.idAttr,pro.havePdf,pro.haveImg,att.id,att.classid,att.title, att.ftitle, att.titlepic, att.smalltext,
-         att.price, att.cert, att.output_speed_color, att.output_speed_mono, att.outputsizemax, att.colour
-        FROM `t_pro_attribute` att left join t_pro_info  pro on att.idAttr=pro.proId
+        att.price, att.cert, att.output_speed_color, att.output_speed_mono, att.outputsizemax, att.colour
+        FROM `t_pro_attribute` att left join t_pro_info pro on att.idAttr=pro.proId
         <where>
             <if test="proName != null and proName !=''">
                 title like CONCAT('%',#{proName},'%')
@@ -102,7 +104,7 @@
     </select>
     <select id="getProInfosCount" parameterType="java.util.HashMap" resultType="java.lang.Integer">
         SELECT count(1)
-        FROM `t_pro_attribute` att left join t_pro_info  pro on att.id=pro.proId
+        FROM `t_pro_attribute` att left join t_pro_info pro on att.id=pro.proId
         <where>
             <if test="proName != null and proName !=''">
                 ftitle like CONCAT('%',#{proName},'%')
