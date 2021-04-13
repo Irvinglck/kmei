@@ -13,12 +13,11 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 前后端交互的类实现消息的接收推送(自己发送给自己)
  *
- * @ServerEndpoint(value = "/test/one") 前端通过此URI和后端交互，建立连接
+ * @ServerEndpoint(value = "/ws") 前端通过此URI和后端交互，建立连接
  */
 @Slf4j
 @Component
 @ServerEndpoint(value = "/ws/{userId}")
-
 public class OneWebSocket {
     private Session session; //建立连接的会话
     private String userId; //当前连接用户id   路径参数
