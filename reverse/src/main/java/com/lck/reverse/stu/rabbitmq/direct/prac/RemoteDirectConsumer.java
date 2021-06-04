@@ -16,36 +16,36 @@ import javax.websocket.Session;
 @Slf4j
 public class RemoteDirectConsumer {
 
-    @Autowired
-    private OneWebSocket oneWebSocket;
-
-    @RabbitListener(queues = RemoteDirectConfig.QUEUE_DIRECT_A)
-    @RabbitHandler
-    public void processtopicA(String msg) {
-        log.info("路由模式direct队列RBCustomerAskServer获取消息  <========: " + msg);
-        if(StringUtils.isEmpty(msg))
-            log.info("");
-        JSONObject jsonObject = JSONObject.parseObject(msg);
-        String customerId = jsonObject.getString("customerId");
-        log.info("发送消息给你===》"+customerId);
-        oneWebSocket.sendMessageById(customerId,"通过websoct发送rabiitmaq中的消息 "+msg);
-    }
-
-    /**
-     * 服务端发送消息给客户端
-     */
-    private void sendMessage(String message, Session toSession) {
-        try {
-            log.info("服务端给客户端[{}]发送消息{}", toSession.getId(), message);
-            toSession.getBasicRemote().sendText(message);
-        } catch (Exception e) {
-            log.error("服务端发送消息给客户端失败：{}", e);
-        }
-    }
-    @RabbitListener(queues = RemoteDirectConfig.QUEUE_DIRECT_B)
-    @RabbitHandler
-    public void processtopicB(String msg) {
-        log.info("路由模式direct队列RBServerRespCustomer获取消息  <===========: " + msg);
-    }
+//    @Autowired
+//    private OneWebSocket oneWebSocket;
+//
+//    @RabbitListener(queues = RemoteDirectConfig.QUEUE_DIRECT_A)
+//    @RabbitHandler
+//    public void processtopicA(String msg) {
+//        log.info("路由模式direct队列RBCustomerAskServer获取消息  <========: " + msg);
+//        if(StringUtils.isEmpty(msg))
+//            log.info("");
+//        JSONObject jsonObject = JSONObject.parseObject(msg);
+//        String customerId = jsonObject.getString("customerId");
+//        log.info("发送消息给你===》"+customerId);
+//        oneWebSocket.sendMessageById(customerId,"通过websoct发送rabiitmaq中的消息 "+msg);
+//    }
+//
+//    /**
+//     * 服务端发送消息给客户端
+//     */
+//    private void sendMessage(String message, Session toSession) {
+//        try {
+//            log.info("服务端给客户端[{}]发送消息{}", toSession.getId(), message);
+//            toSession.getBasicRemote().sendText(message);
+//        } catch (Exception e) {
+//            log.error("服务端发送消息给客户端失败：{}", e);
+//        }
+//    }
+//    @RabbitListener(queues = RemoteDirectConfig.QUEUE_DIRECT_B)
+//    @RabbitHandler
+//    public void processtopicB(String msg) {
+//        log.info("路由模式direct队列RBServerRespCustomer获取消息  <===========: " + msg);
+//    }
 
 }
