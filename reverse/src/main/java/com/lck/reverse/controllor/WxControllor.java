@@ -337,7 +337,8 @@ public class WxControllor {
     public ResultMessage getNews(
 
     ) {
-        return ResultMessage.getDefaultResultMessage(200, "新闻信息", tNewsService.list());
+        List<TNews> collect = tNewsService.list().stream().sorted((o1, o2) -> o1.getId().compareTo(o2.getId())).collect(Collectors.toList());
+        return ResultMessage.getDefaultResultMessage(200, "新闻信息", collect);
     }
 
     @GetMapping("getNewsIndex")
@@ -346,7 +347,7 @@ public class WxControllor {
     ) {
         List<TNews> list = tNewsService.list();
         if (list.size() > 2) {
-            list = list.stream().skip(0).limit(2).collect(Collectors.toList());
+            list = list.stream().skip(0).limit(2).sorted((o1, o2) -> o1.getId().compareTo(o2.getId())).collect(Collectors.toList());
         }
         return ResultMessage.getDefaultResultMessage(200, "新闻信息", list);
     }
