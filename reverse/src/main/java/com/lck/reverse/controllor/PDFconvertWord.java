@@ -1,5 +1,6 @@
 package com.lck.reverse.controllor;
 
+import com.lck.reverse.commons.Person;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,10 +38,4 @@ public class PDFconvertWord {
         }
     }
 
-//         <!-- https://mvnrepository.com/artifact/org.apache.pdfbox/pdfbox -->
-//        <dependency>
-//            <groupId>org.apache.pdfbox</groupId>
-//            <artifactId>pdfbox</artifactId>
-//            <version>2.0.12</version>
-//        </dependency>
 }
